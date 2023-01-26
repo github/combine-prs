@@ -1,0 +1,41 @@
+{
+  "name": "combine-prs-action",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Combine multiple PRs into a single PR",
+  "main": "lib/main.js",
+  "scripts": {
+    "format": "prettier --write '**/*.js'",
+    "format-check": "prettier --check '**/*.js'",
+    "lint": "eslint src/**/*.js",
+    "package": "ncc build src/main.js -o dist --source-map --license licenses.txt",
+    "all": "npm run format && npm run lint && npm run package",
+    "bundle": "npm run format && npm run package"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/github/combine-prs.git"
+  },
+  "keywords": [
+    "actions",
+    "node",
+    "setup"
+  ],
+  "author": "Grant Birkinbine",
+  "license": "MIT",
+  "dependencies": {
+    "@actions/core": "^1.10.0",
+    "@actions/github": "^5.0.1",
+    "@babel/preset-env": "^7.17.10",
+    "babel-core": "^6.26.3"
+  },
+  "devDependencies": {
+    "@babel/plugin-transform-modules-commonjs": "^7.17.9",
+    "@types/node": "^16.10.5",
+    "@vercel/ncc": "^0.34.0",
+    "eslint": "^7.32.0",
+    "eslint-plugin-jest": "^25.3.2",
+    "js-yaml": "^4.1.0",
+    "prettier": "2.5.1"
+  }
+}

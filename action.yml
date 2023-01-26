@@ -1,0 +1,17 @@
+name: "combine-prs"
+description: "Combine multiple PRs into a single PR"
+author: "Grant Birkinbine"
+branding:
+  icon: 'git-branch'
+  color: 'gray-dark'
+inputs:
+  github_token:
+    description: The GitHub token used to create an authenticated client - Provided for you by default!
+    default: ${{ github.token }}
+    required: true
+outputs:
+  triggered:
+    description: 'The string "true" if the trigger was found, otherwise the string "false"'
+runs:
+  using: "node16"
+  main: "dist/index.js"
