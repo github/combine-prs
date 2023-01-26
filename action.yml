@@ -26,8 +26,8 @@ inputs:
     required: true
     default: "nocombine"
 outputs:
-  triggered:
-    description: 'The string "true" if the trigger was found, otherwise the string "false"'
+  pr_url:
+    description: The pull request URL if a PR was created
 runs:
   using: "node16"
   main: "dist/index.js"

@@ -131,7 +131,7 @@ export async function run() {
       '\n\n⚠️ The following PRs were left out due to merge conflicts:\n' +
       mergeFailedPRsString
   }
-  await github.rest.pulls.create({
+  const pullRequest = await github.rest.pulls.create({
     owner: context.repo.owner,
     repo: context.repo.repo,
     title: 'Combined PR',
@@ -139,6 +139,10 @@ export async function run() {
     base: baseBranch,
     body: body
   })
+
+  // print pull request url
+  core.info('Combined PR created: ' + pullRequest.data.html_url)
+  core.setOutput('pr_url', pullRequest.data.html_url)
 }
 
 run()
