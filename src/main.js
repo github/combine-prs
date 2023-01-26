@@ -9,10 +9,13 @@ export async function run() {
   const combineBranchName = core.getInput('combine_branch_name')
   const ignoreLabel = core.getInput('ignore_label')
 
+  // Get all open pull requests in the repository
   const pulls = await github.paginate('GET /repos/:owner/:repo/pulls', {
     owner: context.repo.owner,
     repo: context.repo.repo
   })
+
+  // Filter the pull requests by branch prefix and CI status
   let branchesAndPRStrings = []
   let baseBranch = null
   let baseBranchSHA = null
@@ -22,6 +25,8 @@ export async function run() {
     if (branch.startsWith(branchPrefix)) {
       console.log('Branch matched prefix: ' + branch)
       let statusOK = true
+
+      // Check CI status if required
       if (mustBeGreen) {
         console.log('Checking green status: ' + branch)
         const stateQuery = `query($owner: String!, $repo: String!, $pull_number: Int!) {
@@ -53,6 +58,8 @@ export async function run() {
           statusOK = false
         }
       }
+
+      // Check for ignore label
       console.log('Checking labels: ' + branch)
       const labels = pull['labels']
       for (const label of labels) {
@@ -76,6 +83,8 @@ export async function run() {
     core.setFailed('No PRs/branches matched criteria')
     return
   }
+
+  // Create a new branch
   try {
     await github.rest.git.createRef({
       owner: context.repo.owner,
@@ -91,6 +100,7 @@ export async function run() {
     return
   }
 
+  // Merge all branches into the new branch
   let combinedPRs = []
   let mergeFailedPRs = []
   for (const {branch, prString} of branchesAndPRStrings) {
@@ -109,6 +119,7 @@ export async function run() {
     }
   }
 
+  // Create a new PR with the combined branch
   console.log('Creating combined PR')
   const combinedPRsString = combinedPRs.join('\n')
   let body =
