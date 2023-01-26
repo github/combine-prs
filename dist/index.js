@@ -9967,9 +9967,13 @@ async function run() {
     body: body
   })
 
-  // print pull request url
+  // output pull request url
   _actions_core__WEBPACK_IMPORTED_MODULE_0__.info('Combined PR created: ' + pullRequest.data.html_url)
   _actions_core__WEBPACK_IMPORTED_MODULE_0__.setOutput('pr_url', pullRequest.data.html_url)
+
+  // output pull request number
+  _actions_core__WEBPACK_IMPORTED_MODULE_0__.info('Combined PR number: ' + pullRequest.data.number)
+  _actions_core__WEBPACK_IMPORTED_MODULE_0__.setOutput('pr_number', pullRequest.data.number)
 }
 
 run()
