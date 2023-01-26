@@ -21,14 +21,14 @@ export async function run() {
   let baseBranchSHA = null
   for (const pull of pulls) {
     const branch = pull['head']['ref']
-    console.log('Pull for branch: ' + branch)
+    core.info('Pull for branch: ' + branch)
     if (branch.startsWith(branchPrefix)) {
-      console.log('Branch matched prefix: ' + branch)
+      core.info('Branch matched prefix: ' + branch)
       let statusOK = true
 
       // Check CI status if required
       if (mustBeGreen) {
-        console.log('Checking green status: ' + branch)
+        core.info('Checking green status: ' + branch)
         const stateQuery = `query($owner: String!, $repo: String!, $pull_number: Int!) {
                     repository(owner: $owner, name: $repo) {
                       pullRequest(number:$pull_number) {
@@ -52,26 +52,26 @@ export async function run() {
         const result = await github.graphql(stateQuery, vars)
         const [{commit}] = result.repository.pullRequest.commits.nodes
         const state = commit.statusCheckRollup.state
-        console.log('Validating status: ' + state)
+        core.info('Validating status: ' + state)
         if (state != 'SUCCESS') {
-          console.log('Discarding ' + branch + ' with status ' + state)
+          core.info('Discarding ' + branch + ' with status ' + state)
           statusOK = false
         }
       }
 
       // Check for ignore label
-      console.log('Checking labels: ' + branch)
+      core.info('Checking labels: ' + branch)
       const labels = pull['labels']
       for (const label of labels) {
         const labelName = label['name']
-        console.log('Checking label: ' + labelName)
+        core.info('Checking label: ' + labelName)
         if (labelName == ignoreLabel) {
-          console.log('Discarding ' + branch + ' with label ' + labelName)
+          core.info('Discarding ' + branch + ' with label ' + labelName)
           statusOK = false
         }
       }
       if (statusOK) {
-        console.log('Adding branch to array: ' + branch)
+        core.info('Adding branch to array: ' + branch)
         const prString = '#' + pull['number'] + ' ' + pull['title']
         branchesAndPRStrings.push({branch, prString})
         baseBranch = pull['base']['ref']
@@ -93,7 +93,7 @@ export async function run() {
       sha: baseBranchSHA
     })
   } catch (error) {
-    console.log(error)
+    core.error(error)
     core.setFailed(
       'Failed to create combined branch - maybe a branch by that name already exists?'
     )
@@ -111,16 +111,16 @@ export async function run() {
         base: combineBranchName,
         head: branch
       })
-      console.log('Merged branch ' + branch)
+      core.info('Merged branch ' + branch)
       combinedPRs.push(prString)
     } catch (error) {
-      console.log('Failed to merge branch ' + branch)
+      core.warn('Failed to merge branch ' + branch)
       mergeFailedPRs.push(prString)
     }
   }
 
   // Create a new PR with the combined branch
-  console.log('Creating combined PR')
+  core.info('Creating combined PR')
   const combinedPRsString = combinedPRs.join('\n')
   let body =
     '✅ This PR was created by the Combine PRs action by combining the following PRs:\n' +
