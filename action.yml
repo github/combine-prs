@@ -28,6 +28,8 @@ inputs:
 outputs:
   pr_url:
     description: The pull request URL if a PR was created
+  pr_number:
+    description: The pull request number if a PR was created
 runs:
   using: "node16"
   main: "dist/index.js"
