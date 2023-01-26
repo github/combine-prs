@@ -3,10 +3,12 @@ import * as github from '@actions/github'
 import {context} from '@actions/github'
 
 export async function run() {
-  const branchPrefix = 'dependabot'
-  const mustBeGreen = true
-  const combineBranchName = 'combined-prs-branch'
-  const ignoreLabel = 'nocombine'
+  // Get configuration inputs
+  const branchPrefix = core.getInput('branch_prefix')
+  const mustBeGreen = core.getInput('ci_required') === 'true'
+  const combineBranchName = core.getInput('combine_branch_name')
+  const ignoreLabel = core.getInput('ignore_label')
+
   const pulls = await github.paginate('GET /repos/:owner/:repo/pulls', {
     owner: context.repo.owner,
     repo: context.repo.repo

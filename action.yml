@@ -9,6 +9,22 @@ inputs:
     description: The GitHub token used to create an authenticated client - Provided for you by default!
     default: ${{ github.token }}
     required: true
+  branch_prefix:
+    description: The prefix of the branches to combine
+    required: true
+    default: dependabot
+  ci_required:
+    description: Whether or not CI should be passing to combine the PR
+    required: true
+    default: "true"
+  combine_branch_name:
+    description: The name of the branch to combine the PRs into
+    required: true
+    default: "combined-prs-branch"
+  ignore_label:
+    description: The label to ignore when combining PRs
+    required: true
+    default: "nocombine"
 outputs:
   triggered:
     description: 'The string "true" if the trigger was found, otherwise the string "false"'
