@@ -8,9 +8,13 @@ export async function run() {
   const mustBeGreen = core.getInput('ci_required') === 'true'
   const combineBranchName = core.getInput('combine_branch_name')
   const ignoreLabel = core.getInput('ignore_label')
+  const token = core.getInput('github_token')
+
+  // Create a octokit GitHub client
+  const octokit = github.getOctokit(token)
 
   // Get all open pull requests in the repository
-  const pulls = await github.paginate('GET /repos/:owner/:repo/pulls', {
+  const pulls = await octokit.paginate('GET /repos/:owner/:repo/pulls', {
     owner: context.repo.owner,
     repo: context.repo.repo
   })
@@ -49,7 +53,7 @@ export async function run() {
           repo: context.repo.repo,
           pull_number: pull['number']
         }
-        const result = await github.graphql(stateQuery, vars)
+        const result = await octokit.graphql(stateQuery, vars)
         const [{commit}] = result.repository.pullRequest.commits.nodes
         const state = commit.statusCheckRollup.state
         core.info('Validating status: ' + state)
@@ -86,7 +90,7 @@ export async function run() {
 
   // Create a new branch
   try {
-    await github.rest.git.createRef({
+    await octokit.rest.git.createRef({
       owner: context.repo.owner,
       repo: context.repo.repo,
       ref: 'refs/heads/' + combineBranchName,
@@ -105,7 +109,7 @@ export async function run() {
   let mergeFailedPRs = []
   for (const {branch, prString} of branchesAndPRStrings) {
     try {
-      await github.rest.repos.merge({
+      await octokit.rest.repos.merge({
         owner: context.repo.owner,
         repo: context.repo.repo,
         base: combineBranchName,
@@ -131,7 +135,7 @@ export async function run() {
       '\n\n⚠️ The following PRs were left out due to merge conflicts:\n' +
       mergeFailedPRsString
   }
-  const pullRequest = await github.rest.pulls.create({
+  const pullRequest = await octokit.rest.pulls.create({
     owner: context.repo.owner,
     repo: context.repo.repo,
     title: 'Combined PR',

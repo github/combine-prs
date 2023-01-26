@@ -9831,9 +9831,13 @@ async function run() {
   const mustBeGreen = _actions_core__WEBPACK_IMPORTED_MODULE_0__.getInput('ci_required') === 'true'
   const combineBranchName = _actions_core__WEBPACK_IMPORTED_MODULE_0__.getInput('combine_branch_name')
   const ignoreLabel = _actions_core__WEBPACK_IMPORTED_MODULE_0__.getInput('ignore_label')
+  const token = _actions_core__WEBPACK_IMPORTED_MODULE_0__.getInput('github_token')
+
+  // Create a octokit GitHub client
+  const octokit = _actions_github__WEBPACK_IMPORTED_MODULE_1__.getOctokit(token)
 
   // Get all open pull requests in the repository
-  const pulls = await _actions_github__WEBPACK_IMPORTED_MODULE_1__.paginate('GET /repos/:owner/:repo/pulls', {
+  const pulls = await octokit.paginate('GET /repos/:owner/:repo/pulls', {
     owner: _actions_github__WEBPACK_IMPORTED_MODULE_1__.context.repo.owner,
     repo: _actions_github__WEBPACK_IMPORTED_MODULE_1__.context.repo.repo
   })
@@ -9872,7 +9876,7 @@ async function run() {
           repo: _actions_github__WEBPACK_IMPORTED_MODULE_1__.context.repo.repo,
           pull_number: pull['number']
         }
-        const result = await _actions_github__WEBPACK_IMPORTED_MODULE_1__.graphql(stateQuery, vars)
+        const result = await octokit.graphql(stateQuery, vars)
         const [{commit}] = result.repository.pullRequest.commits.nodes
         const state = commit.statusCheckRollup.state
         _actions_core__WEBPACK_IMPORTED_MODULE_0__.info('Validating status: ' + state)
@@ -9909,7 +9913,7 @@ async function run() {
 
   // Create a new branch
   try {
-    await _actions_github__WEBPACK_IMPORTED_MODULE_1__.rest.git.createRef({
+    await octokit.rest.git.createRef({
       owner: _actions_github__WEBPACK_IMPORTED_MODULE_1__.context.repo.owner,
       repo: _actions_github__WEBPACK_IMPORTED_MODULE_1__.context.repo.repo,
       ref: 'refs/heads/' + combineBranchName,
@@ -9928,7 +9932,7 @@ async function run() {
   let mergeFailedPRs = []
   for (const {branch, prString} of branchesAndPRStrings) {
     try {
-      await _actions_github__WEBPACK_IMPORTED_MODULE_1__.rest.repos.merge({
+      await octokit.rest.repos.merge({
         owner: _actions_github__WEBPACK_IMPORTED_MODULE_1__.context.repo.owner,
         repo: _actions_github__WEBPACK_IMPORTED_MODULE_1__.context.repo.repo,
         base: combineBranchName,
@@ -9954,7 +9958,7 @@ async function run() {
       '\n\n⚠️ The following PRs were left out due to merge conflicts:\n' +
       mergeFailedPRsString
   }
-  const pullRequest = await _actions_github__WEBPACK_IMPORTED_MODULE_1__.rest.pulls.create({
+  const pullRequest = await octokit.rest.pulls.create({
     owner: _actions_github__WEBPACK_IMPORTED_MODULE_1__.context.repo.owner,
     repo: _actions_github__WEBPACK_IMPORTED_MODULE_1__.context.repo.repo,
     title: 'Combined PR',
