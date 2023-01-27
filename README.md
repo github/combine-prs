@@ -24,6 +24,16 @@ This Action is customizable so you can use it for your own purposes and it doesn
 | `pr_url` | The pull request URL if a PR was created |
 | `pr_number` | The pull request number if a PR was created |
 
+## Example 📸
+
+Here is a PR example of this Action:
+
+![example](docs/assets/example.png)
+
+The Action ran on a cron, looked for all branches that had the `dependabot` prefix and then combined them into a single PR.
+
+This allows us to deploy all the dependency updates at once rather than having to deploy each one individually.
+
 ## Usage 💻
 
 Here is a brief example of how to use this Action in a workflow:
