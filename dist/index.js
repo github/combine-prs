@@ -9907,7 +9907,7 @@ async function run() {
     }
   }
   if (branchesAndPRStrings.length == 0) {
-    _actions_core__WEBPACK_IMPORTED_MODULE_0__.setFailed('No PRs/branches matched criteria')
+    _actions_core__WEBPACK_IMPORTED_MODULE_0__.info('No PRs/branches matched criteria')
     return
   }
 
