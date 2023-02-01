@@ -84,7 +84,7 @@ export async function run() {
     }
   }
   if (branchesAndPRStrings.length == 0) {
-    core.setFailed('No PRs/branches matched criteria')
+    core.info('No PRs/branches matched criteria')
     return
   }
 
