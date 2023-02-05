@@ -69,10 +69,21 @@ beforeEach(() => {
                 name: 'nocombine'
               }
             ]
+          },
+          {
+            number: 4,
+            title: 'Update dependency 4',
+            head: {
+              ref: 'dependabot-4'
+            },
+            base: {
+              ref: 'main'
+            },
+            labels: []
           }
         ]
       }),
-      graphql: jest.fn().mockImplementation(() => {
+      graphql: jest.fn().mockImplementationOnce(() => {
         return {
           repository: {
             pullRequest: {
@@ -82,6 +93,60 @@ beforeEach(() => {
                     commit: {
                       statusCheckRollup: {
                         state: 'SUCCESS'
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }).mockImplementationOnce(() => {
+        return {
+          repository: {
+            pullRequest: {
+              commits: {
+                nodes: [
+                  {
+                    commit: {
+                      statusCheckRollup: {
+                        state: 'SUCCESS'
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }).mockImplementationOnce(() => {
+        return {
+          repository: {
+            pullRequest: {
+              commits: {
+                nodes: [
+                  {
+                    commit: {
+                      statusCheckRollup: {
+                        state: 'SUCCESS'
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }).mockImplementationOnce(() => {
+        return {
+          repository: {
+            pullRequest: {
+              commits: {
+                nodes: [
+                  {
+                    commit: {
+                      statusCheckRollup: {
+                        state: 'FAILURE'
                       }
                     }
                   }
@@ -126,15 +191,20 @@ test('successfully runs the action', async () => {
   expect(infoMock).toHaveBeenCalledWith('Pull for branch: dependabot-1')
   expect(infoMock).toHaveBeenCalledWith('Branch matched prefix: dependabot-1')
   expect(infoMock).toHaveBeenCalledWith('Checking green status: dependabot-1')
+  expect(infoMock).toHaveBeenCalledWith('Validating status: SUCCESS')
   expect(infoMock).toHaveBeenCalledWith('Pull for branch: dependabot-2')
+  expect(infoMock).toHaveBeenCalledWith('Branch matched prefix: dependabot-2')
   expect(infoMock).toHaveBeenCalledWith('Checking green status: dependabot-2')
-  expect(infoMock).toHaveBeenCalledWith('Pull for branch: dependabot-2')
+  expect(infoMock).toHaveBeenCalledWith('Validating status: SUCCESS')
   expect(infoMock).toHaveBeenCalledWith('Pull for branch: dependabot-3')
+  expect(infoMock).toHaveBeenCalledWith('Branch matched prefix: dependabot-3')
   expect(infoMock).toHaveBeenCalledWith('Checking green status: dependabot-3')
-  expect(infoMock).toHaveBeenCalledWith('Pull for branch: dependabot-3')
   expect(infoMock).toHaveBeenCalledWith('Validating status: SUCCESS')
-  expect(infoMock).toHaveBeenCalledWith('Validating status: SUCCESS')
-  expect(infoMock).toHaveBeenCalledWith('Validating status: SUCCESS')
+  expect(infoMock).toHaveBeenCalledWith('Pull for branch: dependabot-4')
+  expect(infoMock).toHaveBeenCalledWith('Branch matched prefix: dependabot-4')
+  expect(infoMock).toHaveBeenCalledWith('Checking green status: dependabot-4')
+  expect(infoMock).toHaveBeenCalledWith('Validating status: FAILURE')
+  expect(infoMock).toHaveBeenCalledWith('Discarding dependabot-4 with status FAILURE')
   expect(infoMock).toHaveBeenCalledWith('Checking labels: dependabot-1')
   expect(infoMock).toHaveBeenCalledWith('Checking label: question')
   expect(infoMock).toHaveBeenCalledWith('Adding branch to array: dependabot-1')
