@@ -9831,7 +9831,7 @@ async function run() {
   const mustBeGreen = _actions_core__WEBPACK_IMPORTED_MODULE_0__.getInput('ci_required') === 'true'
   const combineBranchName = _actions_core__WEBPACK_IMPORTED_MODULE_0__.getInput('combine_branch_name')
   const ignoreLabel = _actions_core__WEBPACK_IMPORTED_MODULE_0__.getInput('ignore_label')
-  const token = _actions_core__WEBPACK_IMPORTED_MODULE_0__.getInput('github_token')
+  const token = _actions_core__WEBPACK_IMPORTED_MODULE_0__.getInput('github_token', {required: true})
 
   // Create a octokit GitHub client
   const octokit = _actions_github__WEBPACK_IMPORTED_MODULE_1__.getOctokit(token)
@@ -9908,7 +9908,7 @@ async function run() {
   }
   if (branchesAndPRStrings.length == 0) {
     _actions_core__WEBPACK_IMPORTED_MODULE_0__.info('No PRs/branches matched criteria')
-    return
+    return 'No PRs/branches matched criteria'
   }
 
   // Create a new branch
@@ -9924,7 +9924,7 @@ async function run() {
     _actions_core__WEBPACK_IMPORTED_MODULE_0__.setFailed(
       'Failed to create combined branch - maybe a branch by that name already exists?'
     )
-    return
+    return 'Failed to create combined branch'
   }
 
   // Merge all branches into the new branch
@@ -9941,7 +9941,7 @@ async function run() {
       _actions_core__WEBPACK_IMPORTED_MODULE_0__.info('Merged branch ' + branch)
       combinedPRs.push(prString)
     } catch (error) {
-      _actions_core__WEBPACK_IMPORTED_MODULE_0__.warn('Failed to merge branch ' + branch)
+      _actions_core__WEBPACK_IMPORTED_MODULE_0__.warning('Failed to merge branch ' + branch)
       mergeFailedPRs.push(prString)
     }
   }
@@ -9958,6 +9958,9 @@ async function run() {
       '\n\n⚠️ The following PRs were left out due to merge conflicts:\n' +
       mergeFailedPRsString
   }
+
+  _actions_core__WEBPACK_IMPORTED_MODULE_0__.debug('PR body: ' + body)
+
   const pullRequest = await octokit.rest.pulls.create({
     owner: _actions_github__WEBPACK_IMPORTED_MODULE_1__.context.repo.owner,
     repo: _actions_github__WEBPACK_IMPORTED_MODULE_1__.context.repo.repo,
@@ -9974,9 +9977,15 @@ async function run() {
   // output pull request number
   _actions_core__WEBPACK_IMPORTED_MODULE_0__.info('Combined PR number: ' + pullRequest.data.number)
   _actions_core__WEBPACK_IMPORTED_MODULE_0__.setOutput('pr_number', pullRequest.data.number)
+
+  return 'success'
 }
 
-run()
+// CI will always be set in Actions
+if (process.env.CI === 'true') {
+  /* istanbul ignore next */
+  run()
+}
 
 })();
 
