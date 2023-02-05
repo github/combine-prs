@@ -2,7 +2,8 @@ import { run } from '../src/main'
 import * as github from '@actions/github'
 import * as core from '@actions/core'
 
-// const setOutputMock = jest.spyOn(core, 'setOutput')
+const setOutputMock = jest.spyOn(core, 'setOutput')
+const infoMock = jest.spyOn(core, 'info')
 // const saveStateMock = jest.spyOn(core, 'saveState')
 // const setFailedMock = jest.spyOn(core, 'setFailed')
 // const debugMock = jest.spyOn(core, 'debug')
@@ -102,7 +103,10 @@ beforeEach(() => {
         },
         pulls: {
           create: jest.fn().mockReturnValueOnce({
-            data: {}
+            data: {
+              number: 100,
+              html_url: 'https://github.com/test-owner/test-repo/pull/100'
+            }
           })
         }
       }
@@ -112,6 +116,33 @@ beforeEach(() => {
 
 test('successfully runs the action', async () => {
   expect(await run()).toBe('success')
+  expect(infoMock).toHaveBeenCalledWith('Pull for branch: dependabot-1')
+  expect(infoMock).toHaveBeenCalledWith('Branch matched prefix: dependabot-1')
+  expect(infoMock).toHaveBeenCalledWith('Checking green status: dependabot-1')
+  expect(infoMock).toHaveBeenCalledWith('Pull for branch: dependabot-2')
+  expect(infoMock).toHaveBeenCalledWith('Checking green status: dependabot-2')
+  expect(infoMock).toHaveBeenCalledWith('Pull for branch: dependabot-2')
+  expect(infoMock).toHaveBeenCalledWith('Pull for branch: dependabot-3')
+  expect(infoMock).toHaveBeenCalledWith('Checking green status: dependabot-3')
+  expect(infoMock).toHaveBeenCalledWith('Pull for branch: dependabot-3')
+  expect(infoMock).toHaveBeenCalledWith('Validating status: SUCCESS')
+  expect(infoMock).toHaveBeenCalledWith('Validating status: SUCCESS')
+  expect(infoMock).toHaveBeenCalledWith('Validating status: SUCCESS')
+  expect(infoMock).toHaveBeenCalledWith('Checking labels: dependabot-1')
+  expect(infoMock).toHaveBeenCalledWith('Checking label: question')
+  expect(infoMock).toHaveBeenCalledWith('Adding branch to array: dependabot-1')
+  expect(infoMock).toHaveBeenCalledWith('Checking labels: dependabot-2')
+  expect(infoMock).toHaveBeenCalledWith('Adding branch to array: dependabot-2')
+  expect(infoMock).toHaveBeenCalledWith('Checking labels: dependabot-3')
+  expect(infoMock).toHaveBeenCalledWith('Checking label: nocombine')
+  expect(infoMock).toHaveBeenCalledWith('Discarding dependabot-3 with label nocombine')
+  expect(infoMock).toHaveBeenCalledWith('Merged branch dependabot-1')
+  expect(infoMock).toHaveBeenCalledWith('Merged branch dependabot-2')
+  expect(infoMock).toHaveBeenCalledWith('Creating combined PR')
+  expect(infoMock).toHaveBeenCalledWith('Combined PR created: https://github.com/test-owner/test-repo/pull/100')
+  expect(infoMock).toHaveBeenCalledWith('Combined PR number: 100')
+  expect(setOutputMock).toHaveBeenCalledWith('pr_number', 100)
+  expect(setOutputMock).toHaveBeenCalledWith('pr_url', 'https://github.com/test-owner/test-repo/pull/100')
 })
 
 test('runs the action and fails to create the combine branch', async () => {
