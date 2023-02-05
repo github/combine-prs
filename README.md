@@ -1,5 +1,7 @@
 # combine-prs ➡️📦⬅️
 
+[![coverage](./badges/coverage.svg)](./badges/coverage.svg)
+
 GitHub Action to combine multiple PRs into a single one
 
 ## About 💡
