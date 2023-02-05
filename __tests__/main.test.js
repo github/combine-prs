@@ -52,6 +52,21 @@ beforeEach(() => {
               ref: 'main'
             },
             labels: []
+          },
+          {
+            number: 3,
+            title: 'Update dependency 3',
+            head: {
+              ref: 'dependabot-3'
+            },
+            base: {
+              ref: 'main'
+            },
+            labels: [
+              {
+                name: 'nocombine'
+              }
+            ]
           }
         ]
       }),
