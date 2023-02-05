@@ -135,6 +135,9 @@ export async function run() {
       '\n\n⚠️ The following PRs were left out due to merge conflicts:\n' +
       mergeFailedPRsString
   }
+
+  core.debug('PR body: ' + body)
+
   const pullRequest = await octokit.rest.pulls.create({
     owner: context.repo.owner,
     repo: context.repo.repo,

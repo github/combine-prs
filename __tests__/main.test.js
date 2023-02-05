@@ -4,9 +4,10 @@ import * as core from '@actions/core'
 
 const setOutputMock = jest.spyOn(core, 'setOutput')
 const infoMock = jest.spyOn(core, 'info')
+const warningMock = jest.spyOn(core, 'warning')
 // const saveStateMock = jest.spyOn(core, 'saveState')
 // const setFailedMock = jest.spyOn(core, 'setFailed')
-// const debugMock = jest.spyOn(core, 'debug')
+const debugMock = jest.spyOn(core, 'debug')
 
 beforeEach(() => {
   jest.clearAllMocks()
@@ -97,9 +98,15 @@ beforeEach(() => {
           }),
         },
         repos: {
+          // mock the first value of merge to be a success and the second to be an exception
           merge: jest.fn().mockReturnValueOnce({
-            data: {}
-          })
+            data: {
+              merged: true
+            }
+          }).mockImplementationOnce(() => {
+            throw new Error('merge error')
+          }
+          )
         },
         pulls: {
           create: jest.fn().mockReturnValueOnce({
@@ -137,8 +144,9 @@ test('successfully runs the action', async () => {
   expect(infoMock).toHaveBeenCalledWith('Checking label: nocombine')
   expect(infoMock).toHaveBeenCalledWith('Discarding dependabot-3 with label nocombine')
   expect(infoMock).toHaveBeenCalledWith('Merged branch dependabot-1')
-  expect(infoMock).toHaveBeenCalledWith('Merged branch dependabot-2')
+  expect(warningMock).toHaveBeenCalledWith('Failed to merge branch dependabot-2')
   expect(infoMock).toHaveBeenCalledWith('Creating combined PR')
+  expect(debugMock).toHaveBeenCalledWith('PR body: ✅ This PR was created by the Combine PRs action by combining the following PRs:\n#1 Update dependency 1\n\n⚠️ The following PRs were left out due to merge conflicts:\n#2 Update dependency 2')
   expect(infoMock).toHaveBeenCalledWith('Combined PR created: https://github.com/test-owner/test-repo/pull/100')
   expect(infoMock).toHaveBeenCalledWith('Combined PR number: 100')
   expect(setOutputMock).toHaveBeenCalledWith('pr_number', 100)
