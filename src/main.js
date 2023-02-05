@@ -8,7 +8,7 @@ export async function run() {
   const mustBeGreen = core.getInput('ci_required') === 'true'
   const combineBranchName = core.getInput('combine_branch_name')
   const ignoreLabel = core.getInput('ignore_label')
-  const token = core.getInput('github_token')
+  const token = core.getInput('github_token', {required: true})
 
   // Create a octokit GitHub client
   const octokit = github.getOctokit(token)
@@ -85,7 +85,7 @@ export async function run() {
   }
   if (branchesAndPRStrings.length == 0) {
     core.info('No PRs/branches matched criteria')
-    return
+    return 'No PRs/branches matched criteria'
   }
 
   // Create a new branch
@@ -101,7 +101,7 @@ export async function run() {
     core.setFailed(
       'Failed to create combined branch - maybe a branch by that name already exists?'
     )
-    return
+    return 'Failed to create combined branch'
   }
 
   // Merge all branches into the new branch
@@ -151,6 +151,11 @@ export async function run() {
   // output pull request number
   core.info('Combined PR number: ' + pullRequest.data.number)
   core.setOutput('pr_number', pullRequest.data.number)
+
+  return 'success'
 }
 
-run()
+// CI will always be set in Actions
+if (process.env.CI === 'true') {
+  run()
+}
