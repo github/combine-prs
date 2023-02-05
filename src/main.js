@@ -157,5 +157,6 @@ export async function run() {
 
 // CI will always be set in Actions
 if (process.env.CI === 'true') {
+  /* istanbul ignore next */
   run()
 }
