@@ -158,8 +158,8 @@ export async function run() {
   return 'success'
 }
 
-// CI will always be set in Actions
-if (process.env.CI === 'true') {
+// Do not run if this is a test
+if (process.env.COMBINE_PRS_TEST !== 'true') {
   /* istanbul ignore next */
   run()
 }
