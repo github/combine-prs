@@ -5,8 +5,7 @@ import * as core from '@actions/core'
 const setOutputMock = jest.spyOn(core, 'setOutput')
 const infoMock = jest.spyOn(core, 'info')
 const warningMock = jest.spyOn(core, 'warning')
-// const saveStateMock = jest.spyOn(core, 'saveState')
-// const setFailedMock = jest.spyOn(core, 'setFailed')
+const setFailedMock = jest.spyOn(core, 'setFailed')
 const debugMock = jest.spyOn(core, 'debug')
 
 beforeEach(() => {
@@ -319,6 +318,7 @@ test('runs the action and fails to create the combine branch', async () => {
   })
 
   expect(await run()).toBe('Failed to create combined branch')
+  expect(setFailedMock).toHaveBeenCalledWith('Failed to create combined branch - maybe a branch by that name already exists?')
 })
 
 test('runs the action and does not find any branches to merge together', async () => {
