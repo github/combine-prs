@@ -17,6 +17,10 @@ inputs:
     description: Whether or not CI should be passing to combine the PR
     required: true
     default: "true"
+  review_required:
+    description: Whether or not a review should be required to combine the PR
+    required: false
+    default: "false"
   combine_branch_name:
     description: The name of the branch to combine the PRs into
     required: true
