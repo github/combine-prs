@@ -13,6 +13,10 @@ inputs:
     description: The prefix of the branches to combine
     required: true
     default: dependabot
+  branch_regex:
+    description: The regex to match the branches to combine - more control than branch_prefix
+    required: false
+    default: ""
   ci_required:
     description: Whether or not CI should be passing to combine the PR
     required: true

@@ -16,6 +16,7 @@ This Action is customizable so you can use it for your own purposes and it doesn
 | ---- | ----------- | ------- | -------- |
 | `github_token` | GitHub token to use for authentication within this Action | `${{ github.token }}` | `true` |
 | `branch_prefix` | Prefix for the branch name to use for the combined PR | `dependabot` | `true` |
+| `branch_regex` | The regex to match the branches to combine - more control than branch_prefix | `""` | `false` |
 | `ci_required` | Whether or not CI should be passing to combine the PR - can be `"true"` or `"false"`  | `"true"` | `true` |
 | `review_required` | Whether or not reviews should be passing to combine the PR - can be `"true"` or `"false"` | `"false"` | `false` |
 | `ignore_label` | The label to ignore when combining PRs | `"nocombine"` | `true` |
