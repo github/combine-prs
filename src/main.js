@@ -5,11 +5,18 @@ import {context} from '@actions/github'
 export async function run() {
   // Get configuration inputs
   const branchPrefix = core.getInput('branch_prefix')
+  const branchRegex = core.getInput('branch_regex')
   const mustBeGreen = core.getInput('ci_required') === 'true'
   const mustBeApproved = core.getInput('review_required') === 'true'
   const combineBranchName = core.getInput('combine_branch_name')
   const ignoreLabel = core.getInput('ignore_label')
   const token = core.getInput('github_token', {required: true})
+
+  // check for either prefix or regex
+  if (branchPrefix === '' && branchRegex === '') {
+    core.setFailed('Must specify either branch_prefix or branch_regex')
+    return 'Must specify either branch_prefix or branch_regex'
+  }
 
   // Create a octokit GitHub client
   const octokit = github.getOctokit(token)

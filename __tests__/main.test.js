@@ -465,3 +465,9 @@ test('runs the action and does not find any branches to merge together', async (
 
   expect(await run()).toBe('No PRs/branches matched criteria')
 })
+
+test('runs the action with no prefix or regex set', async () => {
+  process.env.INPUT_BRANCH_PREFIX = ''
+  process.env.INPUT_BRANCH_REGEX = ''
+  expect(await run()).toBe('Must specify either branch_prefix or branch_regex')
+})
