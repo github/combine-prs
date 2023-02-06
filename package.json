@@ -10,7 +10,7 @@
     "lint": "eslint src/**/*.js",
     "package": "ncc build src/main.js -o dist --source-map --license licenses.txt",
     "test": "(COMBINE_PRS_TEST=true jest && make-coverage-badge --output-path ./badges/coverage.svg) || make-coverage-badge --output-path ./badges/coverage.svg",
-    "ci-test": "COMBINE_PRS_TEST=test jest",
+    "ci-test": "COMBINE_PRS_TEST=true jest",
     "all": "npm run format && npm run lint && npm run package",
     "bundle": "npm run format && npm run package"
   },
