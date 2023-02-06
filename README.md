@@ -66,6 +66,8 @@ By default, this Action uses the `branch_prefix` option set to `dependabot` to m
 
 `branch_regex` is a string representing a regex pattern
 
+If `branch_regex` is set, `branch_prefix` will be ignored.
+
 ## CI and Action's Token 🤖
 
 If you need CI to re-run on your newly created "combined" PR, you'll need to use a token that has write access to your repository. This is because the default `github.token` that is provided to Actions prevents CI from running on new commits to prevent recursive workflows. You can use a personal access token or a GitHub App token to get around this.
