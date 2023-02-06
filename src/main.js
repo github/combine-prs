@@ -72,8 +72,12 @@ export async function run() {
         if (mustBeApproved) {
           const reviewDecision = result.repository.pullRequest.reviewDecision
           core.info('Validating review decision: ' + reviewDecision)
-          // In this case, reviewDecision will be null if no reviews are required
-          if (reviewDecision !== 'APPROVED' || reviewDecision !== null) {
+          if (reviewDecision === 'APPROVED') {
+            core.info('Branch ' + branch + ' is approved')
+          } else if (reviewDecision === null) {
+            // In this case, reviewDecision will be null if no reviews are required
+            core.info('Branch ' + branch + ' has no required reviewers - OK')
+          } else {
             core.info('Discarding ' + branch + ' with review decision ' + reviewDecision)
             statusOK = false
           }
