@@ -1,6 +1,6 @@
 import * as core from '@actions/core'
 import * as github from '@actions/github'
-import { context } from '@actions/github'
+import {context} from '@actions/github'
 
 export async function run() {
   // Get configuration inputs
@@ -10,7 +10,7 @@ export async function run() {
   const mustBeApproved = core.getInput('review_required') === 'true'
   const combineBranchName = core.getInput('combine_branch_name')
   const ignoreLabel = core.getInput('ignore_label')
-  const token = core.getInput('github_token', { required: true })
+  const token = core.getInput('github_token', {required: true})
 
   // check for either prefix or regex
   if (branchPrefix === '' && branchRegex === '') {
@@ -83,7 +83,7 @@ export async function run() {
 
       // Check for CI status
       if (mustBeGreen) {
-        const [{ commit }] = result.repository.pullRequest.commits.nodes
+        const [{commit}] = result.repository.pullRequest.commits.nodes
         const state = commit.statusCheckRollup.state
         core.info('Validating status: ' + state)
         if (state !== 'SUCCESS') {
@@ -124,11 +124,10 @@ export async function run() {
     if (statusOK) {
       core.info('Adding branch to array: ' + branch)
       const prString = '#' + pull['number'] + ' ' + pull['title']
-      branchesAndPRStrings.push({ branch, prString })
+      branchesAndPRStrings.push({branch, prString})
       baseBranch = pull['base']['ref']
       baseBranchSHA = pull['base']['sha']
     }
-
   }
   if (branchesAndPRStrings.length == 0) {
     core.info('No PRs/branches matched criteria')
@@ -154,7 +153,7 @@ export async function run() {
   // Merge all branches into the new branch
   let combinedPRs = []
   let mergeFailedPRs = []
-  for (const { branch, prString } of branchesAndPRStrings) {
+  for (const {branch, prString} of branchesAndPRStrings) {
     try {
       await octokit.rest.repos.merge({
         owner: context.repo.owner,
