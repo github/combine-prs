@@ -9829,6 +9829,7 @@ async function run() {
   // Get configuration inputs
   const branchPrefix = _actions_core__WEBPACK_IMPORTED_MODULE_0__.getInput('branch_prefix')
   const mustBeGreen = _actions_core__WEBPACK_IMPORTED_MODULE_0__.getInput('ci_required') === 'true'
+  const mustBeApproved = _actions_core__WEBPACK_IMPORTED_MODULE_0__.getInput('review_required') === 'true'
   const combineBranchName = _actions_core__WEBPACK_IMPORTED_MODULE_0__.getInput('combine_branch_name')
   const ignoreLabel = _actions_core__WEBPACK_IMPORTED_MODULE_0__.getInput('ignore_label')
   const token = _actions_core__WEBPACK_IMPORTED_MODULE_0__.getInput('github_token', {required: true})
@@ -9853,12 +9854,13 @@ async function run() {
       _actions_core__WEBPACK_IMPORTED_MODULE_0__.info('Branch matched prefix: ' + branch)
       let statusOK = true
 
-      // Check CI status if required
-      if (mustBeGreen) {
+      // Check CI status or review status if required
+      if (mustBeGreen || mustBeApproved) {
         _actions_core__WEBPACK_IMPORTED_MODULE_0__.info('Checking green status: ' + branch)
         const stateQuery = `query($owner: String!, $repo: String!, $pull_number: Int!) {
                     repository(owner: $owner, name: $repo) {
                       pullRequest(number:$pull_number) {
+                        reviewDecision
                         commits(last: 1) {
                           nodes {
                             commit {
@@ -9877,12 +9879,33 @@ async function run() {
           pull_number: pull['number']
         }
         const result = await octokit.graphql(stateQuery, vars)
-        const [{commit}] = result.repository.pullRequest.commits.nodes
-        const state = commit.statusCheckRollup.state
-        _actions_core__WEBPACK_IMPORTED_MODULE_0__.info('Validating status: ' + state)
-        if (state != 'SUCCESS') {
-          _actions_core__WEBPACK_IMPORTED_MODULE_0__.info('Discarding ' + branch + ' with status ' + state)
-          statusOK = false
+
+        // Check for CI status
+        if (mustBeGreen) {
+          const [{commit}] = result.repository.pullRequest.commits.nodes
+          const state = commit.statusCheckRollup.state
+          _actions_core__WEBPACK_IMPORTED_MODULE_0__.info('Validating status: ' + state)
+          if (state !== 'SUCCESS') {
+            _actions_core__WEBPACK_IMPORTED_MODULE_0__.info('Discarding ' + branch + ' with status ' + state)
+            statusOK = false
+          }
+        }
+
+        // Check for review approval
+        if (mustBeApproved) {
+          const reviewDecision = result.repository.pullRequest.reviewDecision
+          _actions_core__WEBPACK_IMPORTED_MODULE_0__.info('Validating review decision: ' + reviewDecision)
+          if (reviewDecision === 'APPROVED') {
+            _actions_core__WEBPACK_IMPORTED_MODULE_0__.info('Branch ' + branch + ' is approved')
+          } else if (reviewDecision === null) {
+            // In this case, reviewDecision will be null if no reviews are required
+            _actions_core__WEBPACK_IMPORTED_MODULE_0__.info('Branch ' + branch + ' has no required reviewers - OK')
+          } else {
+            _actions_core__WEBPACK_IMPORTED_MODULE_0__.info(
+              'Discarding ' + branch + ' with review decision ' + reviewDecision
+            )
+            statusOK = false
+          }
         }
       }
 

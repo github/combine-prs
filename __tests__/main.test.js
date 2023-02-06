@@ -291,7 +291,9 @@ test('successfully runs the action', async () => {
   expect(infoMock).toHaveBeenCalledWith('Checking green status: dependabot-5')
   expect(infoMock).toHaveBeenCalledWith('Validating status: SUCCESS')
   expect(infoMock).toHaveBeenCalledWith('Validating review decision: null')
-  expect(infoMock).toHaveBeenCalledWith('Branch dependabot-5 has no required reviewers - OK')
+  expect(infoMock).toHaveBeenCalledWith(
+    'Branch dependabot-5 has no required reviewers - OK'
+  )
   expect(infoMock).toHaveBeenCalledWith('Checking labels: dependabot-1')
   expect(infoMock).toHaveBeenCalledWith('Checking label: question')
   expect(infoMock).toHaveBeenCalledWith('Adding branch to array: dependabot-1')
@@ -401,7 +403,9 @@ test('runs the action and fails to create the combine branch', async () => {
   })
 
   expect(await run()).toBe('Failed to create combined branch')
-  expect(setFailedMock).toHaveBeenCalledWith('Failed to create combined branch - maybe a branch by that name already exists?')
+  expect(setFailedMock).toHaveBeenCalledWith(
+    'Failed to create combined branch - maybe a branch by that name already exists?'
+  )
 })
 
 test('runs the action and does not find any branches to merge together', async () => {
