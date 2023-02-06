@@ -1,14 +1,15 @@
 import * as core from '@actions/core'
 import * as github from '@actions/github'
-import {context} from '@actions/github'
+import { context } from '@actions/github'
 
 export async function run() {
   // Get configuration inputs
   const branchPrefix = core.getInput('branch_prefix')
   const mustBeGreen = core.getInput('ci_required') === 'true'
+  const mustBeApproved = core.getInput('review_required') === 'true'
   const combineBranchName = core.getInput('combine_branch_name')
   const ignoreLabel = core.getInput('ignore_label')
-  const token = core.getInput('github_token', {required: true})
+  const token = core.getInput('github_token', { required: true })
 
   // Create a octokit GitHub client
   const octokit = github.getOctokit(token)
@@ -30,12 +31,13 @@ export async function run() {
       core.info('Branch matched prefix: ' + branch)
       let statusOK = true
 
-      // Check CI status if required
-      if (mustBeGreen) {
+      // Check CI status or review status if required
+      if (mustBeGreen || mustBeApproved) {
         core.info('Checking green status: ' + branch)
         const stateQuery = `query($owner: String!, $repo: String!, $pull_number: Int!) {
                     repository(owner: $owner, name: $repo) {
                       pullRequest(number:$pull_number) {
+                        reviewDecision
                         commits(last: 1) {
                           nodes {
                             commit {
@@ -54,12 +56,27 @@ export async function run() {
           pull_number: pull['number']
         }
         const result = await octokit.graphql(stateQuery, vars)
-        const [{commit}] = result.repository.pullRequest.commits.nodes
-        const state = commit.statusCheckRollup.state
-        core.info('Validating status: ' + state)
-        if (state != 'SUCCESS') {
-          core.info('Discarding ' + branch + ' with status ' + state)
-          statusOK = false
+
+        // Check for CI status
+        if (mustBeGreen) {
+          const [{ commit }] = result.repository.pullRequest.commits.nodes
+          const state = commit.statusCheckRollup.state
+          core.info('Validating status: ' + state)
+          if (state !== 'SUCCESS') {
+            core.info('Discarding ' + branch + ' with status ' + state)
+            statusOK = false
+          }
+        }
+
+        // Check for review approval
+        if (mustBeApproved) {
+          const reviewDecision = result.repository.pullRequest.reviewDecision
+          core.info('Validating review decision: ' + reviewDecision)
+          // In this case, reviewDecision will be null if no reviews are required
+          if (reviewDecision !== 'APPROVED' || reviewDecision !== null) {
+            core.info('Discarding ' + branch + ' with review decision ' + reviewDecision)
+            statusOK = false
+          }
         }
       }
 
@@ -77,7 +94,7 @@ export async function run() {
       if (statusOK) {
         core.info('Adding branch to array: ' + branch)
         const prString = '#' + pull['number'] + ' ' + pull['title']
-        branchesAndPRStrings.push({branch, prString})
+        branchesAndPRStrings.push({ branch, prString })
         baseBranch = pull['base']['ref']
         baseBranchSHA = pull['base']['sha']
       }
@@ -107,7 +124,7 @@ export async function run() {
   // Merge all branches into the new branch
   let combinedPRs = []
   let mergeFailedPRs = []
-  for (const {branch, prString} of branchesAndPRStrings) {
+  for (const { branch, prString } of branchesAndPRStrings) {
     try {
       await octokit.rest.repos.merge({
         owner: context.repo.owner,
