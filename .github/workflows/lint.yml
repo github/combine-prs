@@ -1,4 +1,4 @@
-name: test
+name: lint
 on:
   pull_request:
   push:
@@ -7,7 +7,7 @@ on:
       - 'releases/*'
 
 jobs:
-  test:
+  lint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3.3.0
@@ -19,5 +19,10 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-node-
 
-      - run: npm ci
-      - run: npm run ci-test
+      - name: install dependencies
+        run: npm ci
+
+      - name: lint
+        run: |
+          npm run format-check
+          npm run lint
