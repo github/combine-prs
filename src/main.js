@@ -2,6 +2,9 @@ import * as core from '@actions/core'
 import * as github from '@actions/github'
 import {context} from '@actions/github'
 
+const repoName = 'github/combine-prs'
+const repoUrl = 'https://github.com/github/combine-prs'
+
 export async function run() {
   // Get configuration inputs
   const branchPrefix = core.getInput('branch_prefix')
@@ -11,6 +14,8 @@ export async function run() {
   const combineBranchName = core.getInput('combine_branch_name')
   const ignoreLabel = core.getInput('ignore_label')
   const token = core.getInput('github_token', {required: true})
+  const prTitle = core.getInput('pr_title', {required: true})
+  const prBodyHeader = core.getInput('pr_body_header', {required: true})
 
   // check for either prefix or regex
   if (branchPrefix === '' && branchRegex === '') {
@@ -175,23 +180,23 @@ export async function run() {
 
   // Create a new PR with the combined branch
   core.info('Creating combined PR')
-  const combinedPRsString = combinedPRs.join('\n')
-  let body =
-    '✅ This PR was created by the Combine PRs action by combining the following PRs:\n' +
-    combinedPRsString
+  const combinedPRsString = `- ${combinedPRs.join('\n- ')}`
+  let body = `${prBodyHeader}\n\n✅ The following pull requests have been successfully combined on this PR:\n${combinedPRsString}`
   if (mergeFailedPRs.length > 0) {
-    const mergeFailedPRsString = mergeFailedPRs.join('\n')
+    const mergeFailedPRsString = `- ${mergeFailedPRs.join('\n- ')}`
     body +=
       '\n\n⚠️ The following PRs were left out due to merge conflicts:\n' +
       mergeFailedPRsString
   }
+
+  body += `\n\n> This PR was created by the [\`${repoName}\`](${repoUrl}) action`
 
   core.debug('PR body: ' + body)
 
   const pullRequest = await octokit.rest.pulls.create({
     owner: context.repo.owner,
     repo: context.repo.repo,
-    title: 'Combined PR',
+    title: prTitle,
     head: combineBranchName,
     base: baseBranch,
     body: body
