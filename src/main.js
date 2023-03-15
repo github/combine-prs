@@ -176,12 +176,12 @@ export async function run() {
 
   // Create a new PR with the combined branch
   core.info('Creating combined PR')
-  const combinedPRsString = combinedPRs.join('\n')
+  const combinedPRsString = `- ${combinedPRs.join('\n- ')}`
   let body =
     '✅ This PR was created by the Combine PRs action by combining the following PRs:\n' +
     combinedPRsString
   if (mergeFailedPRs.length > 0) {
-    const mergeFailedPRsString = mergeFailedPRs.join('\n')
+    const mergeFailedPRsString = `- ${mergeFailedPRs.join('\n- ')}`
     body +=
       '\n\n⚠️ The following PRs were left out due to merge conflicts:\n' +
       mergeFailedPRsString
