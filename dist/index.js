@@ -9834,6 +9834,7 @@ async function run() {
   const combineBranchName = _actions_core__WEBPACK_IMPORTED_MODULE_0__.getInput('combine_branch_name')
   const ignoreLabel = _actions_core__WEBPACK_IMPORTED_MODULE_0__.getInput('ignore_label')
   const token = _actions_core__WEBPACK_IMPORTED_MODULE_0__.getInput('github_token', {required: true})
+  const prTitle = _actions_core__WEBPACK_IMPORTED_MODULE_0__.getInput('pr_title', {required: true})
 
   // check for either prefix or regex
   if (branchPrefix === '' && branchRegex === '') {
@@ -10014,7 +10015,7 @@ async function run() {
   const pullRequest = await octokit.rest.pulls.create({
     owner: _actions_github__WEBPACK_IMPORTED_MODULE_1__.context.repo.owner,
     repo: _actions_github__WEBPACK_IMPORTED_MODULE_1__.context.repo.repo,
-    title: 'Combined PR',
+    title: prTitle,
     head: combineBranchName,
     base: baseBranch,
     body: body

@@ -33,6 +33,7 @@ beforeEach(() => {
   jest.spyOn(core, 'error').mockImplementation(() => {})
   process.env.INPUT_GITHUB_TOKEN = 'faketoken'
   process.env.INPUT_CI_REQUIRED = 'true'
+  process.env.INPUT_PR_TITLE = 'Combined PRs'
   process.env.INPUT_REVIEW_REQUIRED = 'false'
   process.env.INPUT_COMBINE_BRANCH_NAME = 'combined-prs-branch'
   process.env.INPUT_BRANCH_PREFIX = 'dependabot'

@@ -13,6 +13,10 @@ inputs:
     description: The prefix of the branches to combine
     required: true
     default: dependabot
+  pr_title:
+    description: The title of the pull request to create
+    required: true
+    default: "Combined PRs"
   branch_regex:
     description: The regex to match the branches to combine - more control than branch_prefix
     required: false
