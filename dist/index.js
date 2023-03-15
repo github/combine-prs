@@ -9966,11 +9966,15 @@ async function run() {
       sha: baseBranchSHA
     })
   } catch (error) {
-    _actions_core__WEBPACK_IMPORTED_MODULE_0__.error(error)
-    _actions_core__WEBPACK_IMPORTED_MODULE_0__.setFailed(
-      'Failed to create combined branch - maybe a branch by that name already exists?'
-    )
-    return 'Failed to create combined branch'
+    // If the branch already exists, we'll try to merge into it
+    if (error.status == 422) {
+      _actions_core__WEBPACK_IMPORTED_MODULE_0__.warning('Branch already exists - will try to merge into it')
+    } else {
+      // Otherwise, fail the Action
+      _actions_core__WEBPACK_IMPORTED_MODULE_0__.error(error)
+      _actions_core__WEBPACK_IMPORTED_MODULE_0__.setFailed('Failed to create combined branch')
+      return 'Failed to create combined branch'
+    }
   }
 
   // Merge all branches into the new branch

@@ -143,11 +143,15 @@ export async function run() {
       sha: baseBranchSHA
     })
   } catch (error) {
-    core.error(error)
-    core.setFailed(
-      'Failed to create combined branch - maybe a branch by that name already exists?'
-    )
-    return 'Failed to create combined branch'
+    // If the branch already exists, we'll try to merge into it
+    if (error.status == 422) {
+      core.warning('Branch already exists - will try to merge into it')
+    } else {
+      // Otherwise, fail the Action
+      core.error(error)
+      core.setFailed('Failed to create combined branch')
+      return 'Failed to create combined branch'
+    }
   }
 
   // Merge all branches into the new branch
