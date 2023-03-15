@@ -10016,17 +10016,41 @@ async function run() {
 
   _actions_core__WEBPACK_IMPORTED_MODULE_0__.debug('PR body: ' + body)
 
-  const pullRequest = await octokit.rest.pulls.create({
-    owner: _actions_github__WEBPACK_IMPORTED_MODULE_1__.context.repo.owner,
-    repo: _actions_github__WEBPACK_IMPORTED_MODULE_1__.context.repo.repo,
-    title: prTitle,
-    head: combineBranchName,
-    base: baseBranch,
-    body: body
-  })
+  let pullRequest
+  try {
+    pullRequest = await octokit.rest.pulls.create({
+      owner: _actions_github__WEBPACK_IMPORTED_MODULE_1__.context.repo.owner,
+      repo: _actions_github__WEBPACK_IMPORTED_MODULE_1__.context.repo.repo,
+      title: prTitle,
+      head: combineBranchName,
+      base: baseBranch,
+      body: body
+    })
+  } catch (error) {
+    if (error.status == 422) {
+      _actions_core__WEBPACK_IMPORTED_MODULE_0__.warning('Combined PR already exists')
+      // update the PR body
+      const prs = await octokit.rest.pulls.list({
+        owner: _actions_github__WEBPACK_IMPORTED_MODULE_1__.context.repo.owner,
+        repo: _actions_github__WEBPACK_IMPORTED_MODULE_1__.context.repo.repo,
+        head: _actions_github__WEBPACK_IMPORTED_MODULE_1__.context.repo.owner + ':' + combineBranchName,
+        base: baseBranch,
+        state: 'open'
+      })
+      const pr = prs.data[0]
+      _actions_core__WEBPACK_IMPORTED_MODULE_0__.info('Updating PR body')
+      await octokit.rest.pulls.update({
+        owner: _actions_github__WEBPACK_IMPORTED_MODULE_1__.context.repo.owner,
+        repo: _actions_github__WEBPACK_IMPORTED_MODULE_1__.context.repo.repo,
+        pull_number: pr.number,
+        body: body
+      })
+      pullRequest = {data: pr}
+    }
+  }
 
   // output pull request url
-  _actions_core__WEBPACK_IMPORTED_MODULE_0__.info('Combined PR created: ' + pullRequest.data.html_url)
+  _actions_core__WEBPACK_IMPORTED_MODULE_0__.info('Combined PR url: ' + pullRequest.data.html_url)
   _actions_core__WEBPACK_IMPORTED_MODULE_0__.setOutput('pr_url', pullRequest.data.html_url)
 
   // output pull request number
