@@ -17,6 +17,10 @@ inputs:
     description: The title of the pull request to create
     required: true
     default: "Combined PRs"
+  pr_body_header:
+    description: The header of the pull request body
+    required: true
+    default: "# Combined PRs ➡️📦⬅️"
   branch_regex:
     description: The regex to match the branches to combine - more control than branch_prefix
     required: false

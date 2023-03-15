@@ -9825,6 +9825,9 @@ __nccwpck_require__.r(__webpack_exports__);
 
 
 
+const repoName = 'github/combine-prs'
+const repoUrl = 'https://github.com/github/combine-prs'
+
 async function run() {
   // Get configuration inputs
   const branchPrefix = _actions_core__WEBPACK_IMPORTED_MODULE_0__.getInput('branch_prefix')
@@ -9835,6 +9838,7 @@ async function run() {
   const ignoreLabel = _actions_core__WEBPACK_IMPORTED_MODULE_0__.getInput('ignore_label')
   const token = _actions_core__WEBPACK_IMPORTED_MODULE_0__.getInput('github_token', {required: true})
   const prTitle = _actions_core__WEBPACK_IMPORTED_MODULE_0__.getInput('pr_title', {required: true})
+  const prBodyHeader = _actions_core__WEBPACK_IMPORTED_MODULE_0__.getInput('pr_body_header', {required: true})
 
   // check for either prefix or regex
   if (branchPrefix === '' && branchRegex === '') {
@@ -10000,15 +10004,15 @@ async function run() {
   // Create a new PR with the combined branch
   _actions_core__WEBPACK_IMPORTED_MODULE_0__.info('Creating combined PR')
   const combinedPRsString = `- ${combinedPRs.join('\n- ')}`
-  let body =
-    '✅ This PR was created by the Combine PRs action by combining the following PRs:\n' +
-    combinedPRsString
+  let body = `${prBodyHeader}\n\n✅ The following pull requests have been successfully combined on this PR:\n${combinedPRsString}`
   if (mergeFailedPRs.length > 0) {
     const mergeFailedPRsString = `- ${mergeFailedPRs.join('\n- ')}`
     body +=
       '\n\n⚠️ The following PRs were left out due to merge conflicts:\n' +
       mergeFailedPRsString
   }
+
+  body += `\n\n> This PR was created by the [\`${repoName}\`](${repoUrl}) action`
 
   _actions_core__WEBPACK_IMPORTED_MODULE_0__.debug('PR body: ' + body)
 
