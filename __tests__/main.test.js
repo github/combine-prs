@@ -344,7 +344,7 @@ test('successfully runs the action', async () => {
     'PR body: # Combined PRs ➡️📦⬅️\n\n✅ The following pull requests have been successfully combined on this PR:\n- #1 Update dependency 1\n- #5 Update dependency 5\n\n⚠️ The following PRs were left out due to merge conflicts:\n- #2 Update dependency 2\n\n> This PR was created by the [`github/combine-prs`](https://github.com/github/combine-prs) action'
   )
   expect(infoMock).toHaveBeenCalledWith(
-    'Combined PR created: https://github.com/test-owner/test-repo/pull/100'
+    'Combined PR url: https://github.com/test-owner/test-repo/pull/100'
   )
   expect(infoMock).toHaveBeenCalledWith('Combined PR number: 100')
   expect(setOutputMock).toHaveBeenCalledWith('pr_number', 100)
@@ -413,7 +413,7 @@ test('successfully runs the action with the branch_regex option', async () => {
     'PR body: # Combined PRs ➡️📦⬅️\n\n✅ The following pull requests have been successfully combined on this PR:\n- #1 Update dependency 1\n- #5 Update dependency 5\n\n⚠️ The following PRs were left out due to merge conflicts:\n- #2 Update dependency 2\n\n> This PR was created by the [`github/combine-prs`](https://github.com/github/combine-prs) action'
   )
   expect(infoMock).toHaveBeenCalledWith(
-    'Combined PR created: https://github.com/test-owner/test-repo/pull/100'
+    'Combined PR url: https://github.com/test-owner/test-repo/pull/100'
   )
   expect(infoMock).toHaveBeenCalledWith('Combined PR number: 100')
   expect(setOutputMock).toHaveBeenCalledWith('pr_number', 100)
@@ -502,7 +502,7 @@ test('runs the action and fails to create the combine branch', async () => {
   expect(setFailedMock).toHaveBeenCalledWith('Failed to create combined branch')
 })
 
-test('runs the action and finds the combine branch already exists', async () => {
+test('runs the action and finds the combine branch already exists and the PR also exists', async () => {
   jest.spyOn(github, 'getOctokit').mockImplementation(() => {
     return {
       paginate: jest.fn().mockImplementation(() => {
@@ -573,11 +573,18 @@ test('runs the action and finds the combine branch already exists', async () => 
           })
         },
         pulls: {
-          create: jest.fn().mockReturnValueOnce({
-            data: {
-              html_url: 'https://github.com/test-owner/test-repo/pull/100',
-              number: 100
-            }
+          create: jest
+            .fn()
+            .mockRejectedValueOnce(new AlreadyExistsError('PR already exists')),
+          list: jest.fn().mockReturnValueOnce({
+            data: [
+              {
+                number: 100
+              }
+            ]
+          }),
+          update: jest.fn().mockReturnValueOnce({
+            data: {}
           })
         }
       }
