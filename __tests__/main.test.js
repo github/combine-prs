@@ -2,6 +2,20 @@ import {run} from '../src/main'
 import * as github from '@actions/github'
 import * as core from '@actions/core'
 
+class BigBadError extends Error {
+  constructor(message) {
+    super(message)
+    this.status = 500
+  }
+}
+
+class AlreadyExistsError extends Error {
+  constructor(message) {
+    super(message)
+    this.status = 422
+  }
+}
+
 const setOutputMock = jest.spyOn(core, 'setOutput')
 const infoMock = jest.spyOn(core, 'info')
 const warningMock = jest.spyOn(core, 'warning')
@@ -465,10 +479,10 @@ test('runs the action and fails to create the combine branch', async () => {
             data: {}
           })
         },
+        git: {
+          createRef: jest.fn().mockRejectedValueOnce(new BigBadError('Oh no!'))
+        },
         repos: {
-          createRef: jest.fn().mockReturnValueOnce({
-            data: {}
-          }),
           merge: jest.fn().mockReturnValueOnce({
             data: {}
           })
@@ -483,9 +497,96 @@ test('runs the action and fails to create the combine branch', async () => {
   })
 
   expect(await run()).toBe('Failed to create combined branch')
-  expect(setFailedMock).toHaveBeenCalledWith(
-    'Failed to create combined branch - maybe a branch by that name already exists?'
+  expect(setFailedMock).toHaveBeenCalledWith('Failed to create combined branch')
+})
+
+test('runs the action and finds the combine branch already exists', async () => {
+  jest.spyOn(github, 'getOctokit').mockImplementation(() => {
+    return {
+      paginate: jest.fn().mockImplementation(() => {
+        return [
+          {
+            number: 1,
+            title: 'Update dependency 1',
+            head: {
+              ref: 'dependabot-1'
+            },
+            base: {
+              ref: 'main'
+            },
+            labels: [
+              {
+                name: 'question'
+              }
+            ]
+          },
+          {
+            number: 2,
+            title: 'Update dependency 2',
+            head: {
+              ref: 'dependabot-2'
+            },
+            base: {
+              ref: 'main'
+            },
+            labels: []
+          }
+        ]
+      }),
+      graphql: jest.fn().mockImplementation(() => {
+        return {
+          repository: {
+            pullRequest: {
+              commits: {
+                nodes: [
+                  {
+                    commit: {
+                      statusCheckRollup: {
+                        state: 'SUCCESS'
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }),
+      rest: {
+        issues: {
+          createComment: jest.fn().mockReturnValueOnce({
+            data: {}
+          })
+        },
+        git: {
+          createRef: jest
+            .fn()
+            .mockRejectedValueOnce(
+              new AlreadyExistsError('Reference already exists')
+            )
+        },
+        repos: {
+          merge: jest.fn().mockReturnValueOnce({
+            data: {}
+          })
+        },
+        pulls: {
+          create: jest.fn().mockReturnValueOnce({
+            data: {
+              html_url: 'https://github.com/test-owner/test-repo/pull/100',
+              number: 100
+            }
+          })
+        }
+      }
+    }
+  })
+
+  expect(await run()).toBe('success')
+  expect(warningMock).toHaveBeenCalledWith(
+    'Branch already exists - will try to merge into it'
   )
+  expect(setOutputMock).toHaveBeenCalledWith('pr_number', 100)
 })
 
 test('runs the action and does not find any branches to merge together', async () => {
