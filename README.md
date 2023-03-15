@@ -1,6 +1,6 @@
 # combine-prs ➡️📦⬅️
 
-[![test](https://github.com/github/combine-prs/actions/workflows/test.yml/badge.svg)](https://github.com/github/combine-prs/actions/workflows/test.yml) [![CodeQL](https://github.com/github/combine-prs/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/github/combine-prs/actions/workflows/codeql-analysis.yml) [![package-check](https://github.com/github/combine-prs/actions/workflows/package-check.yml/badge.svg)](https://github.com/github/combine-prs/actions/workflows/package-check.yml) [![coverage](./badges/coverage.svg)](./badges/coverage.svg)
+[![test](https://github.com/github/combine-prs/actions/workflows/test.yml/badge.svg)](https://github.com/github/combine-prs/actions/workflows/test.yml) [![lint](https://github.com/github/combine-prs/actions/workflows/lint.yml/badge.svg)](https://github.com/github/combine-prs/actions/workflows/lint.yml) [![CodeQL](https://github.com/github/combine-prs/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/github/combine-prs/actions/workflows/codeql-analysis.yml) [![package-check](https://github.com/github/combine-prs/actions/workflows/package-check.yml/badge.svg)](https://github.com/github/combine-prs/actions/workflows/package-check.yml) [![coverage](./badges/coverage.svg)](./badges/coverage.svg)
 
 GitHub Action to combine multiple PRs into a single one
 
