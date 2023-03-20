@@ -598,6 +598,103 @@ test('runs the action and finds the combine branch already exists and the PR als
   expect(setOutputMock).toHaveBeenCalledWith('pr_number', 100)
 })
 
+test('runs the action and finds the combine branch already exists and the PR also exists and the PR is in a closed state', async () => {
+  jest.spyOn(github, 'getOctokit').mockImplementation(() => {
+    return {
+      paginate: jest.fn().mockImplementation(() => {
+        return [
+          {
+            number: 1,
+            title: 'Update dependency 1',
+            head: {
+              ref: 'dependabot-1'
+            },
+            base: {
+              ref: 'main'
+            },
+            labels: [
+              {
+                name: 'question'
+              }
+            ]
+          },
+          {
+            number: 2,
+            title: 'Update dependency 2',
+            head: {
+              ref: 'dependabot-2'
+            },
+            base: {
+              ref: 'main'
+            },
+            labels: []
+          }
+        ]
+      }),
+      graphql: jest.fn().mockImplementation(() => {
+        return {
+          repository: {
+            pullRequest: {
+              commits: {
+                nodes: [
+                  {
+                    commit: {
+                      statusCheckRollup: {
+                        state: 'SUCCESS'
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }),
+      rest: {
+        issues: {
+          createComment: jest.fn().mockReturnValueOnce({
+            data: {}
+          })
+        },
+        git: {
+          createRef: jest
+            .fn()
+            .mockRejectedValueOnce(
+              new AlreadyExistsError('Reference already exists')
+            )
+        },
+        repos: {
+          merge: jest.fn().mockReturnValueOnce({
+            data: {}
+          })
+        },
+        pulls: {
+          create: jest
+            .fn()
+            .mockRejectedValueOnce(new AlreadyExistsError('PR already exists')),
+          list: jest.fn().mockReturnValueOnce({
+            data: [
+              {
+                number: 100,
+                state: 'closed'
+              }
+            ]
+          }),
+          update: jest.fn().mockReturnValue({
+            data: {}
+          })
+        }
+      }
+    }
+  })
+
+  expect(await run()).toBe('success')
+  expect(warningMock).toHaveBeenCalledWith(
+    'Branch already exists - will try to merge into it'
+  )
+  expect(setOutputMock).toHaveBeenCalledWith('pr_number', 100)
+})
+
 test('runs the action and does not find any branches to merge together', async () => {
   jest.spyOn(github, 'getOctokit').mockImplementation(() => {
     return {
