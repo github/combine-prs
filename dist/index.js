@@ -10049,6 +10049,18 @@ async function run() {
     }
   }
 
+  // check the combined PR's state to see if it is closed
+  const combinedPRState = pullRequest.data.state
+  if (combinedPRState === 'closed') {
+    _actions_core__WEBPACK_IMPORTED_MODULE_0__.info('Combined PR is closed - attempting to reopen')
+    await octokit.rest.pulls.update({
+      owner: _actions_github__WEBPACK_IMPORTED_MODULE_1__.context.repo.owner,
+      repo: _actions_github__WEBPACK_IMPORTED_MODULE_1__.context.repo.repo,
+      pull_number: pullRequest.data.number,
+      state: 'open'
+    })
+  }
+
   // output pull request url
   _actions_core__WEBPACK_IMPORTED_MODULE_0__.info('Combined PR url: ' + pullRequest.data.html_url)
   _actions_core__WEBPACK_IMPORTED_MODULE_0__.setOutput('pr_url', pullRequest.data.html_url)

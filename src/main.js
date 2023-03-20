@@ -226,6 +226,18 @@ export async function run() {
     }
   }
 
+  // check the combined PR's state to see if it is closed
+  const combinedPRState = pullRequest.data.state
+  if (combinedPRState === 'closed') {
+    core.info('Combined PR is closed - attempting to reopen')
+    await octokit.rest.pulls.update({
+      owner: context.repo.owner,
+      repo: context.repo.repo,
+      pull_number: pullRequest.data.number,
+      state: 'open'
+    })
+  }
+
   // output pull request url
   core.info('Combined PR url: ' + pullRequest.data.html_url)
   core.setOutput('pr_url', pullRequest.data.html_url)
