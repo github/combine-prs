@@ -174,6 +174,7 @@ export async function run() {
       combinedPRs.push(prString)
     } catch (error) {
       core.warning('Failed to merge branch ' + branch)
+      core.warning('Reason: ' + error)
       mergeFailedPRs.push(prString)
     }
   }
