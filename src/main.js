@@ -24,6 +24,12 @@ export async function run() {
     return 'Must specify either branch_prefix or branch_regex'
   }
 
+  // check valid label config
+  if (ignoreLabel && selectLabel && ignoreLabel == selectLabel) {
+    core.setFailed('ignore_label and select_label cannot have the same value')
+    return 'ignore_label and select_label cannot have the same value'
+  }
+
   // Create a octokit GitHub client
   const octokit = github.getOctokit(token)
 

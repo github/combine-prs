@@ -907,3 +907,13 @@ test('runs the action with no prefix or regex set', async () => {
   process.env.INPUT_BRANCH_REGEX = ''
   expect(await run()).toBe('Must specify either branch_prefix or branch_regex')
 })
+
+test('runs the action when select_label and ignore_label have the same value', async () => {
+  process.env.INPUT_IGNORE_LABEL = ''
+  process.env.INPUT_SELECT_LABEL = ''
+  expect(await run()).toBe('success')
+  
+  process.env.INPUT_IGNORE_LABEL = 'some-label'
+  process.env.INPUT_SELECT_LABEL = 'some-label'
+  expect(await run()).toBe('ignore_label and select_label cannot have the same value')
+})
