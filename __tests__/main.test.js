@@ -424,6 +424,112 @@ test('successfully runs the action with the branch_regex option', async () => {
   )
 })
 
+test('label check does not override CI or review status', async () => {
+  process.env.INPUT_SELECT_LABEL = 'please-combine'
+  process.env.INPUT_CI_REQUIRED = 'true'
+  process.env.INPUT_REVIEW_REQUIRED = 'true'
+
+  jest.spyOn(github, 'getOctokit').mockImplementation(() => {
+    return {
+      paginate: jest.fn().mockImplementation(() => {
+        return [
+          {
+            number: 1,
+            title: 'Update dependency 1',
+            head: {
+              ref: 'dependabot-failed-ci'
+            },
+            base: {
+              ref: 'main'
+            },
+            labels: [
+              {
+                name: 'please-combine'
+              }
+            ]
+          },
+          {
+            number: 2,
+            title: 'Update dependency 2',
+            head: {
+              ref: 'dependabot-awaiting-review'
+            },
+            base: {
+              ref: 'main'
+            },
+            labels: [
+              {
+                name: 'please-combine'
+              }
+            ]
+          }
+        ]
+      }),
+      graphql: jest
+        .fn()
+        .mockImplementationOnce(() => {
+          return {
+            repository: {
+              pullRequest: {
+                reviewDecision: 'APPROVED',
+                commits: {
+                  nodes: [
+                    {
+                      commit: {
+                        statusCheckRollup: {
+                          state: 'FAILURE'
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        })
+        .mockImplementationOnce(() => {
+          return {
+            repository: {
+              pullRequest: {
+                reviewDecision: 'REVIEW_REQUIRED',
+                commits: {
+                  nodes: [
+                    {
+                      commit: {
+                        statusCheckRollup: {
+                          state: 'SUCCESS'
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }),
+      rest: {
+        git: {
+          createRef: jest.fn().mockReturnValueOnce({
+            data: {}
+          })
+        },
+        repos: {
+          merge: jest.fn().mockReturnValueOnce({
+            data: {}
+          })
+        },
+        pulls: {
+          create: jest.fn().mockReturnValueOnce({
+            data: {}
+          })
+        }
+      }
+    }
+  })
+
+  expect(await run()).toBe('No PRs/branches matched criteria')
+})
+
 test('successfully runs the action with the select_label option', async () => {
   process.env.INPUT_CI_REQUIRED = false // just to reduce needed mocks
   process.env.INPUT_IGNORE_LABEL = 'no-combine'

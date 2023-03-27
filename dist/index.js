@@ -9946,44 +9946,7 @@ async function run() {
     }
 
     // Check labels
-    _actions_core__WEBPACK_IMPORTED_MODULE_0__.info('Checking labels: ' + branch)
-    const labels = pull['labels']
-
-    if (selectLabel) {
-      statusOK = false
-
-      for (const label of labels) {
-        const labelName = label['name']
-        _actions_core__WEBPACK_IMPORTED_MODULE_0__.info('Checking select_label for: ' + labelName)
-        if (labelName == selectLabel) {
-          statusOK = true
-          break
-        }
-      }
-      if (!statusOK) {
-        _actions_core__WEBPACK_IMPORTED_MODULE_0__.info(
-          'Discarding ' + branch + ' because it does not match select_label'
-        )
-      }
-    }
-
-    if (ignoreLabel && statusOK) {
-      for (const label of labels) {
-        const labelName = label['name']
-        _actions_core__WEBPACK_IMPORTED_MODULE_0__.info('Checking ignore_label for: ' + labelName)
-        if (labelName == ignoreLabel) {
-          _actions_core__WEBPACK_IMPORTED_MODULE_0__.info(
-            'Discarding ' +
-              branch +
-              ' with label ' +
-              labelName +
-              ' because it matches ignore_label'
-          )
-          statusOK = false
-          break
-        }
-      }
-    }
+    statusOK = checkLabels(pull, branch, selectLabel, ignoreLabel) && statusOK
 
     if (statusOK) {
       _actions_core__WEBPACK_IMPORTED_MODULE_0__.info('Adding branch to array: ' + branch)
@@ -10112,6 +10075,48 @@ async function run() {
 if (process.env.COMBINE_PRS_TEST !== 'true') {
   /* istanbul ignore next */
   run()
+}
+
+function checkLabels(pull, branch, selectLabel, ignoreLabel) {
+  _actions_core__WEBPACK_IMPORTED_MODULE_0__.info('Checking labels: ' + branch)
+  const labels = pull['labels']
+
+  if (selectLabel) {
+    let matchesSelectLabel = false
+    for (const label of labels) {
+      const labelName = label['name']
+      _actions_core__WEBPACK_IMPORTED_MODULE_0__.info('Checking select_label for: ' + labelName)
+      if (labelName == selectLabel) {
+        matchesSelectLabel = true
+        break
+      }
+    }
+    if (!matchesSelectLabel) {
+      _actions_core__WEBPACK_IMPORTED_MODULE_0__.info(
+        'Discarding ' + branch + ' because it does not match select_label'
+      )
+      return false
+    }
+  }
+
+  if (ignoreLabel) {
+    for (const label of labels) {
+      const labelName = label['name']
+      _actions_core__WEBPACK_IMPORTED_MODULE_0__.info('Checking ignore_label for: ' + labelName)
+      if (labelName == ignoreLabel) {
+        _actions_core__WEBPACK_IMPORTED_MODULE_0__.info(
+          'Discarding ' +
+            branch +
+            ' with label ' +
+            labelName +
+            ' because it matches ignore_label'
+        )
+        return false
+      }
+    }
+  }
+
+  return true
 }
 
 })();

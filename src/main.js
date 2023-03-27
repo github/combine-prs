@@ -123,44 +123,7 @@ export async function run() {
     }
 
     // Check labels
-    core.info('Checking labels: ' + branch)
-    const labels = pull['labels']
-
-    if (selectLabel) {
-      statusOK = false
-
-      for (const label of labels) {
-        const labelName = label['name']
-        core.info('Checking select_label for: ' + labelName)
-        if (labelName == selectLabel) {
-          statusOK = true
-          break
-        }
-      }
-      if (!statusOK) {
-        core.info(
-          'Discarding ' + branch + ' because it does not match select_label'
-        )
-      }
-    }
-
-    if (ignoreLabel && statusOK) {
-      for (const label of labels) {
-        const labelName = label['name']
-        core.info('Checking ignore_label for: ' + labelName)
-        if (labelName == ignoreLabel) {
-          core.info(
-            'Discarding ' +
-              branch +
-              ' with label ' +
-              labelName +
-              ' because it matches ignore_label'
-          )
-          statusOK = false
-          break
-        }
-      }
-    }
+    statusOK = checkLabels(pull, branch, selectLabel, ignoreLabel) && statusOK
 
     if (statusOK) {
       core.info('Adding branch to array: ' + branch)
@@ -289,4 +252,46 @@ export async function run() {
 if (process.env.COMBINE_PRS_TEST !== 'true') {
   /* istanbul ignore next */
   run()
+}
+
+function checkLabels(pull, branch, selectLabel, ignoreLabel) {
+  core.info('Checking labels: ' + branch)
+  const labels = pull['labels']
+
+  if (selectLabel) {
+    let matchesSelectLabel = false
+    for (const label of labels) {
+      const labelName = label['name']
+      core.info('Checking select_label for: ' + labelName)
+      if (labelName == selectLabel) {
+        matchesSelectLabel = true
+        break
+      }
+    }
+    if (!matchesSelectLabel) {
+      core.info(
+        'Discarding ' + branch + ' because it does not match select_label'
+      )
+      return false
+    }
+  }
+
+  if (ignoreLabel) {
+    for (const label of labels) {
+      const labelName = label['name']
+      core.info('Checking ignore_label for: ' + labelName)
+      if (labelName == ignoreLabel) {
+        core.info(
+          'Discarding ' +
+            branch +
+            ' with label ' +
+            labelName +
+            ' because it matches ignore_label'
+        )
+        return false
+      }
+    }
+  }
+
+  return true
 }
