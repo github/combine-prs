@@ -185,26 +185,6 @@ beforeEach(() => {
                     {
                       commit: {
                         statusCheckRollup: {
-                          state: 'SUCCESS'
-                        }
-                      }
-                    }
-                  ]
-                }
-              }
-            }
-          }
-        })
-        .mockImplementationOnce(() => {
-          return {
-            repository: {
-              pullRequest: {
-                reviewDecision: 'APPROVED',
-                commits: {
-                  nodes: [
-                    {
-                      commit: {
-                        statusCheckRollup: {
                           state: 'FAILURE'
                         }
                       }
@@ -1011,13 +991,24 @@ test('runs the action with no prefix or regex set', async () => {
 })
 
 test('runs the action when select_label and ignore_label have the same value', async () => {
-  process.env.INPUT_IGNORE_LABEL = ''
-  process.env.INPUT_SELECT_LABEL = ''
-  expect(await run()).toBe('success')
-
   process.env.INPUT_IGNORE_LABEL = 'some-label'
   process.env.INPUT_SELECT_LABEL = 'some-label'
   expect(await run()).toBe(
     'ignore_label and select_label cannot have the same value'
   )
+})
+
+test('ignore_label and select_label can both be empty', async() => {
+    process.env.INPUT_IGNORE_LABEL = ''
+    process.env.INPUT_SELECT_LABEL = ''
+  
+    jest.spyOn(github, 'getOctokit').mockImplementation(() => {
+      return {
+        paginate: jest.fn().mockImplementation(() => {
+          return []
+        })
+      }
+    })
+
+    expect(await run()).toBe('No PRs/branches matched criteria')
 })
