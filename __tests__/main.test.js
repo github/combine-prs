@@ -912,8 +912,10 @@ test('runs the action when select_label and ignore_label have the same value', a
   process.env.INPUT_IGNORE_LABEL = ''
   process.env.INPUT_SELECT_LABEL = ''
   expect(await run()).toBe('success')
-  
+
   process.env.INPUT_IGNORE_LABEL = 'some-label'
   process.env.INPUT_SELECT_LABEL = 'some-label'
-  expect(await run()).toBe('ignore_label and select_label cannot have the same value')
+  expect(await run()).toBe(
+    'ignore_label and select_label cannot have the same value'
+  )
 })
