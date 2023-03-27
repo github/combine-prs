@@ -871,7 +871,7 @@ test('runs the action and only one branch matches criteria', async () => {
             },
             base: {
               ref: 'main'
-            },
+            }
           }
         ]
       }),
@@ -917,7 +917,9 @@ test('runs the action and only one branch matches criteria', async () => {
     }
   })
 
-  expect(await run()).toBe('Only one PR/branch matched criteria. No need to combine.')
+  expect(await run()).toBe(
+    'Only one PR/branch matched criteria. No need to combine.'
+  )
 })
 
 test('runs the action and does not find any branches to merge together', async () => {
