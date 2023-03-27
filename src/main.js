@@ -132,7 +132,9 @@ export async function run() {
         }
       }
       if (!statusOK) {
-        core.info('Discarding ' + branch + ' because it does not match select_label')
+        core.info(
+          'Discarding ' + branch + ' because it does not match select_label'
+        )
       }
     }
 
@@ -141,13 +143,19 @@ export async function run() {
         const labelName = label['name']
         core.info('Checking ignore_label for: ' + labelName)
         if (labelName == ignoreLabel) {
-          core.info('Discarding ' + branch + ' with label ' + labelName + ' because it matches ignore_label')
+          core.info(
+            'Discarding ' +
+              branch +
+              ' with label ' +
+              labelName +
+              ' because it matches ignore_label'
+          )
           statusOK = false
           break
         }
       }
     }
-    
+
     if (statusOK) {
       core.info('Adding branch to array: ' + branch)
       const prString = '#' + pull['number'] + ' ' + pull['title']
