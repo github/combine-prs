@@ -871,7 +871,8 @@ test('runs the action and only one branch matches criteria', async () => {
             },
             base: {
               ref: 'main'
-            }
+            },
+            labels: []
           }
         ]
       }),
