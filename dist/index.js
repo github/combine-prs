@@ -9836,6 +9836,7 @@ async function run() {
   const mustBeApproved = _actions_core__WEBPACK_IMPORTED_MODULE_0__.getInput('review_required') === 'true'
   const combineBranchName = _actions_core__WEBPACK_IMPORTED_MODULE_0__.getInput('combine_branch_name')
   const ignoreLabel = _actions_core__WEBPACK_IMPORTED_MODULE_0__.getInput('ignore_label')
+  const selectLabel = _actions_core__WEBPACK_IMPORTED_MODULE_0__.getInput('select_label')
   const token = _actions_core__WEBPACK_IMPORTED_MODULE_0__.getInput('github_token', {required: true})
   const prTitle = _actions_core__WEBPACK_IMPORTED_MODULE_0__.getInput('pr_title', {required: true})
   const prBodyHeader = _actions_core__WEBPACK_IMPORTED_MODULE_0__.getInput('pr_body_header', {required: true})
@@ -9938,17 +9939,46 @@ async function run() {
       }
     }
 
-    // Check for ignore label
+    // Check labels
     _actions_core__WEBPACK_IMPORTED_MODULE_0__.info('Checking labels: ' + branch)
     const labels = pull['labels']
-    for (const label of labels) {
-      const labelName = label['name']
-      _actions_core__WEBPACK_IMPORTED_MODULE_0__.info('Checking label: ' + labelName)
-      if (labelName == ignoreLabel) {
-        _actions_core__WEBPACK_IMPORTED_MODULE_0__.info('Discarding ' + branch + ' with label ' + labelName)
-        statusOK = false
+
+    if (selectLabel) {
+      statusOK = false
+
+      for (const label of labels) {
+        const labelName = label['name']
+        _actions_core__WEBPACK_IMPORTED_MODULE_0__.info('Checking select_label for: ' + labelName)
+        if (labelName == selectLabel) {
+          statusOK = true
+          break
+        }
+      }
+      if (!statusOK) {
+        _actions_core__WEBPACK_IMPORTED_MODULE_0__.info(
+          'Discarding ' + branch + ' because it does not match select_label'
+        )
       }
     }
+
+    if (ignoreLabel && statusOK) {
+      for (const label of labels) {
+        const labelName = label['name']
+        _actions_core__WEBPACK_IMPORTED_MODULE_0__.info('Checking ignore_label for: ' + labelName)
+        if (labelName == ignoreLabel) {
+          _actions_core__WEBPACK_IMPORTED_MODULE_0__.info(
+            'Discarding ' +
+              branch +
+              ' with label ' +
+              labelName +
+              ' because it matches ignore_label'
+          )
+          statusOK = false
+          break
+        }
+      }
+    }
+
     if (statusOK) {
       _actions_core__WEBPACK_IMPORTED_MODULE_0__.info('Adding branch to array: ' + branch)
       const prString = '#' + pull['number'] + ' ' + pull['title']
