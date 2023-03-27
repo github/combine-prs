@@ -9888,10 +9888,11 @@ async function run() {
       }
     }
 
-    let statusOK = true
+    // Check labels
+    let statusOK = checkLabels(pull, branch, selectLabel, ignoreLabel)
 
     // Check CI status or review status if required
-    if (mustBeGreen || mustBeApproved) {
+    if (statusOK && (mustBeGreen || mustBeApproved)) {
       _actions_core__WEBPACK_IMPORTED_MODULE_0__.info('Checking green status: ' + branch)
       const stateQuery = `query($owner: String!, $repo: String!, $pull_number: Int!) {
                     repository(owner: $owner, name: $repo) {
@@ -9944,9 +9945,6 @@ async function run() {
         }
       }
     }
-
-    // Check labels
-    statusOK = checkLabels(pull, branch, selectLabel, ignoreLabel) && statusOK
 
     if (statusOK) {
       _actions_core__WEBPACK_IMPORTED_MODULE_0__.info('Adding branch to array: ' + branch)
