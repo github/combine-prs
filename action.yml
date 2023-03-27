@@ -41,6 +41,10 @@ inputs:
     description: The label to ignore when combining PRs
     required: true
     default: "nocombine"
+  select_label:
+    description: The label marking PRs that should be combined
+    required: false
+    default: ""
 outputs:
   pr_url:
     description: The pull request URL if a PR was created

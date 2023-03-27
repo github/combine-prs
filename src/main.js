@@ -13,6 +13,7 @@ export async function run() {
   const mustBeApproved = core.getInput('review_required') === 'true'
   const combineBranchName = core.getInput('combine_branch_name')
   const ignoreLabel = core.getInput('ignore_label')
+  const selectLabel = core.getInput('select_label')
   const token = core.getInput('github_token', {required: true})
   const prTitle = core.getInput('pr_title', {required: true})
   const prBodyHeader = core.getInput('pr_body_header', {required: true})
@@ -21,6 +22,12 @@ export async function run() {
   if (branchPrefix === '' && branchRegex === '') {
     core.setFailed('Must specify either branch_prefix or branch_regex')
     return 'Must specify either branch_prefix or branch_regex'
+  }
+
+  // check valid label config
+  if (ignoreLabel && selectLabel && ignoreLabel == selectLabel) {
+    core.setFailed('ignore_label and select_label cannot have the same value')
+    return 'ignore_label and select_label cannot have the same value'
   }
 
   // Create a octokit GitHub client
@@ -115,17 +122,46 @@ export async function run() {
       }
     }
 
-    // Check for ignore label
+    // Check labels
     core.info('Checking labels: ' + branch)
     const labels = pull['labels']
-    for (const label of labels) {
-      const labelName = label['name']
-      core.info('Checking label: ' + labelName)
-      if (labelName == ignoreLabel) {
-        core.info('Discarding ' + branch + ' with label ' + labelName)
-        statusOK = false
+
+    if (selectLabel) {
+      statusOK = false
+
+      for (const label of labels) {
+        const labelName = label['name']
+        core.info('Checking select_label for: ' + labelName)
+        if (labelName == selectLabel) {
+          statusOK = true
+          break
+        }
+      }
+      if (!statusOK) {
+        core.info(
+          'Discarding ' + branch + ' because it does not match select_label'
+        )
       }
     }
+
+    if (ignoreLabel && statusOK) {
+      for (const label of labels) {
+        const labelName = label['name']
+        core.info('Checking ignore_label for: ' + labelName)
+        if (labelName == ignoreLabel) {
+          core.info(
+            'Discarding ' +
+              branch +
+              ' with label ' +
+              labelName +
+              ' because it matches ignore_label'
+          )
+          statusOK = false
+          break
+        }
+      }
+    }
+
     if (statusOK) {
       core.info('Adding branch to array: ' + branch)
       const prString = '#' + pull['number'] + ' ' + pull['title']
