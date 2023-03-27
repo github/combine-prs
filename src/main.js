@@ -24,12 +24,6 @@ export async function run() {
     return 'Must specify either branch_prefix or branch_regex'
   }
 
-  // check for correct label configuration
-  if (ignoreLabel !== '' && selectLabel !== '') {
-    core.setFailed('ignore_label and select_label cannot both be set')
-    return 'ignore_label and select_label cannot both be set'
-  }
-
   // Create a octokit GitHub client
   const octokit = github.getOctokit(token)
 
@@ -122,22 +116,34 @@ export async function run() {
       }
     }
 
-    // Check for ignore label
+    // Check labels
     core.info('Checking labels: ' + branch)
     const labels = pull['labels']
-    for (const label of labels) {
-      const labelName = label['name']
-      core.info('Checking label: ' + labelName)
-      
-      if (ignoreLabel) {
+
+    if (selectLabel) {
+      statusOK = false
+
+      for (const label of labels) {
+        const labelName = label['name']
+        core.info('Checking select_label for: ' + labelName)
+        if (labelName == selectLabel) {
+          statusOK = true
+          break
+        }
+      }
+      if (!statusOK) {
+        core.info('Discarding ' + branch + ' because it does not match select_label')
+      }
+    }
+
+    if (ignoreLabel && statusOK) {
+      for (const label of labels) {
+        const labelName = label['name']
+        core.info('Checking ignore_label for: ' + labelName)
         if (labelName == ignoreLabel) {
-          core.info('Discarding ' + branch + ' with label ' + labelName + ' because it matches ignore_label "' + ignoreLabel + '"')
+          core.info('Discarding ' + branch + ' with label ' + labelName + ' because it matches ignore_label')
           statusOK = false
-        }  
-      } else if (selectLabel) {
-        if (labelName != selectLabel) {
-          core.info('Discarding ' + branch + ' with label ' + labelName + ' because it does not match select_label "'+ selectLabel +'"')
-          statusOK = false
+          break
         }
       }
     }

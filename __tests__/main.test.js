@@ -39,6 +39,7 @@ beforeEach(() => {
   process.env.INPUT_COMBINE_BRANCH_NAME = 'combined-prs-branch'
   process.env.INPUT_BRANCH_PREFIX = 'dependabot'
   process.env.INPUT_IGNORE_LABEL = 'nocombine'
+  process.env.INPUT_SELECT_LABEL = ''
   process.env.GITHUB_REPOSITORY = 'test-owner/test-repo'
 
   jest.spyOn(github, 'getOctokit').mockImplementation(() => {
@@ -322,14 +323,14 @@ test('successfully runs the action', async () => {
     'Branch dependabot-5 has no required reviewers - OK'
   )
   expect(infoMock).toHaveBeenCalledWith('Checking labels: dependabot-1')
-  expect(infoMock).toHaveBeenCalledWith('Checking label: question')
+  expect(infoMock).toHaveBeenCalledWith('Checking ignore_label for: question')
   expect(infoMock).toHaveBeenCalledWith('Adding branch to array: dependabot-1')
   expect(infoMock).toHaveBeenCalledWith('Checking labels: dependabot-2')
   expect(infoMock).toHaveBeenCalledWith('Adding branch to array: dependabot-2')
   expect(infoMock).toHaveBeenCalledWith('Checking labels: dependabot-3')
-  expect(infoMock).toHaveBeenCalledWith('Checking label: nocombine')
+  expect(infoMock).toHaveBeenCalledWith('Checking ignore_label for: nocombine')
   expect(infoMock).toHaveBeenCalledWith(
-    'Discarding dependabot-3 with label nocombine'
+    'Discarding dependabot-3 with label nocombine because it matches ignore_label'
   )
   expect(infoMock).toHaveBeenCalledWith('Checking labels: dependabot-4')
   expect(infoMock).toHaveBeenCalledWith('Checking labels: dependabot-5')
@@ -391,14 +392,14 @@ test('successfully runs the action with the branch_regex option', async () => {
     'Branch dependabot-5 has no required reviewers - OK'
   )
   expect(infoMock).toHaveBeenCalledWith('Checking labels: dependabot-1')
-  expect(infoMock).toHaveBeenCalledWith('Checking label: question')
+  expect(infoMock).toHaveBeenCalledWith('Checking ignore_label for: question')
   expect(infoMock).toHaveBeenCalledWith('Adding branch to array: dependabot-1')
   expect(infoMock).toHaveBeenCalledWith('Checking labels: dependabot-2')
   expect(infoMock).toHaveBeenCalledWith('Adding branch to array: dependabot-2')
   expect(infoMock).toHaveBeenCalledWith('Checking labels: dependabot-3')
-  expect(infoMock).toHaveBeenCalledWith('Checking label: nocombine')
+  expect(infoMock).toHaveBeenCalledWith('Checking ignore_label for: nocombine')
   expect(infoMock).toHaveBeenCalledWith(
-    'Discarding dependabot-3 with label nocombine'
+    'Discarding dependabot-3 with label nocombine because it matches ignore_label'
   )
   expect(infoMock).toHaveBeenCalledWith('Checking labels: dependabot-4')
   expect(infoMock).toHaveBeenCalledWith('Checking labels: dependabot-5')
@@ -421,6 +422,126 @@ test('successfully runs the action with the branch_regex option', async () => {
     'pr_url',
     'https://github.com/test-owner/test-repo/pull/100'
   )
+})
+
+test('successfully runs the action with the select_label option', async () => {
+  process.env.INPUT_CI_REQUIRED = false // just to reduce needed mocks
+  process.env.INPUT_IGNORE_LABEL = 'no-combine'
+  process.env.INPUT_SELECT_LABEL = 'please-combine'
+
+  jest.spyOn(github, 'getOctokit').mockImplementation(() => {
+    return {
+      paginate: jest.fn().mockImplementation(() => {
+        return [
+          {
+            number: 1,
+            title: 'Update dependency 1',
+            head: {
+              ref: 'dependabot-random-label'
+            },
+            base: {
+              ref: 'main'
+            },
+            labels: [
+              {
+                name: 'some-random-label'
+              }
+            ]
+          },
+          {
+            number: 2,
+            title: 'Update dependency 2',
+            head: {
+              ref: 'dependabot-select-label'
+            },
+            base: {
+              ref: 'main'
+            },
+            labels: [
+              {
+                name: 'some-random-label'
+              },
+              {
+                name: 'please-combine'
+              },
+              {
+                name: 'another-label'
+              }
+            ]
+          },
+          {
+            number: 3,
+            title: 'Update dependency 3',
+            head: {
+              ref: 'dependabot-no-labels'
+            },
+            base: {
+              ref: 'main'
+            },
+            labels: []
+          },
+          {
+            number: 3,
+            title: 'Update dependency 3',
+            head: {
+              ref: 'dependabot-both-ignore-and-select'
+            },
+            base: {
+              ref: 'main'
+            },
+            labels: [
+              {
+                name: 'no-combine'
+              },
+              {
+                name: 'please-combine'
+              }
+            ]
+          }
+        ]
+      }),
+      rest: {
+        git: {
+            createRef: jest.fn().mockReturnValueOnce({
+              data: {}
+            })
+        },
+        repos: {
+          merge: jest.fn().mockReturnValueOnce({
+            data: {}
+          })
+        },
+        pulls: {
+          create: jest.fn().mockReturnValueOnce({
+            data: {}
+          })
+        }
+      }
+    }
+  })
+
+  expect(await run()).toBe('success')
+  
+  expect(infoMock).toHaveBeenCalledWith('Checking labels: dependabot-random-label')
+  expect(infoMock).toHaveBeenCalledWith('Checking select_label for: some-random-label')
+  expect(infoMock).toHaveBeenCalledWith('Discarding dependabot-random-label because it does not match select_label')
+  
+  expect(infoMock).toHaveBeenCalledWith('Checking labels: dependabot-select-label')
+  expect(infoMock).toHaveBeenCalledWith('Checking select_label for: some-random-label')
+  expect(infoMock).toHaveBeenCalledWith('Checking select_label for: please-combine')
+  expect(infoMock).toHaveBeenCalledWith('Checking ignore_label for: some-random-label')
+  expect(infoMock).toHaveBeenCalledWith('Checking ignore_label for: please-combine')
+  expect(infoMock).toHaveBeenCalledWith('Checking ignore_label for: another-label')
+  expect(infoMock).toHaveBeenCalledWith('Adding branch to array: dependabot-select-label')
+  
+  expect(infoMock).toHaveBeenCalledWith('Checking labels: dependabot-no-labels')
+  expect(infoMock).toHaveBeenCalledWith('Discarding dependabot-no-labels because it does not match select_label')
+  
+  expect(infoMock).toHaveBeenCalledWith('Checking labels: dependabot-both-ignore-and-select')
+  expect(infoMock).toHaveBeenCalledWith('Checking select_label for: no-combine')
+  expect(infoMock).toHaveBeenCalledWith('Checking select_label for: please-combine')
+  expect(infoMock).toHaveBeenCalledWith('Checking ignore_label for: no-combine')
+  expect(infoMock).toHaveBeenCalledWith('Discarding dependabot-both-ignore-and-select with label no-combine because it matches ignore_label')
 })
 
 test('runs the action and fails to create the combine branch', async () => {
