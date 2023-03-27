@@ -13,6 +13,7 @@ export async function run() {
   const mustBeApproved = core.getInput('review_required') === 'true'
   const combineBranchName = core.getInput('combine_branch_name')
   const ignoreLabel = core.getInput('ignore_label')
+  const selectLabel = core.getInput('select_label')
   const token = core.getInput('github_token', {required: true})
   const prTitle = core.getInput('pr_title', {required: true})
   const prBodyHeader = core.getInput('pr_body_header', {required: true})
@@ -21,6 +22,12 @@ export async function run() {
   if (branchPrefix === '' && branchRegex === '') {
     core.setFailed('Must specify either branch_prefix or branch_regex')
     return 'Must specify either branch_prefix or branch_regex'
+  }
+
+  // check for correct label configuration
+  if (ignoreLabel !== '' && selectLabel !== '') {
+    core.setFailed('ignore_label and select_label cannot both be set')
+    return 'ignore_label and select_label cannot both be set'
   }
 
   // Create a octokit GitHub client
@@ -121,11 +128,20 @@ export async function run() {
     for (const label of labels) {
       const labelName = label['name']
       core.info('Checking label: ' + labelName)
-      if (labelName == ignoreLabel) {
-        core.info('Discarding ' + branch + ' with label ' + labelName)
-        statusOK = false
+      
+      if (ignoreLabel) {
+        if (labelName == ignoreLabel) {
+          core.info('Discarding ' + branch + ' with label ' + labelName + ' because it matches ignore_label "' + ignoreLabel + '"')
+          statusOK = false
+        }  
+      } else if (selectLabel) {
+        if (labelName != selectLabel) {
+          core.info('Discarding ' + branch + ' with label ' + labelName + ' because it does not match select_label "'+ selectLabel +'"')
+          statusOK = false
+        }
       }
     }
+    
     if (statusOK) {
       core.info('Adding branch to array: ' + branch)
       const prString = '#' + pull['number'] + ' ' + pull['title']
