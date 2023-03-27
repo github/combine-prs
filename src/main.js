@@ -174,7 +174,7 @@ export async function run() {
     core.info('No PRs/branches matched criteria')
     return 'No PRs/branches matched criteria'
   }
-  
+
   if (branchesAndPRStrings.length == 1) {
     core.info('Only one PR/branch matched criteria. No need to combine.')
     return 'Only one PR/branch matched criteria. No need to combine.'
