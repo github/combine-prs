@@ -859,6 +859,67 @@ test('runs the action and finds the combine branch already exists and the PR als
   expect(setOutputMock).toHaveBeenCalledWith('pr_number', 100)
 })
 
+test('runs the action and only one branch matches criteria', async () => {
+  jest.spyOn(github, 'getOctokit').mockImplementation(() => {
+    return {
+      paginate: jest.fn().mockImplementation(() => {
+        return [
+          {
+            number: 1,
+            head: {
+              ref: 'dependabot-only-branch'
+            },
+            base: {
+              ref: 'main'
+            },
+          }
+        ]
+      }),
+      graphql: jest.fn().mockImplementation(() => {
+        return {
+          repository: {
+            pullRequest: {
+              commits: {
+                nodes: [
+                  {
+                    commit: {
+                      statusCheckRollup: {
+                        state: 'SUCCESS'
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }),
+      rest: {
+        issues: {
+          createComment: jest.fn().mockReturnValueOnce({
+            data: {}
+          })
+        },
+        repos: {
+          createRef: jest.fn().mockReturnValueOnce({
+            data: {}
+          }),
+          merge: jest.fn().mockReturnValueOnce({
+            data: {}
+          })
+        },
+        pulls: {
+          create: jest.fn().mockReturnValueOnce({
+            data: {}
+          })
+        }
+      }
+    }
+  })
+
+  expect(await run()).toBe('Only one PR/branch matched criteria. No need to combine.')
+})
+
 test('runs the action and does not find any branches to merge together', async () => {
   jest.spyOn(github, 'getOctokit').mockImplementation(() => {
     return {
