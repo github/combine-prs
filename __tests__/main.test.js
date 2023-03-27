@@ -481,8 +481,8 @@ test('successfully runs the action with the select_label option', async () => {
             labels: []
           },
           {
-            number: 3,
-            title: 'Update dependency 3',
+            number: 4,
+            title: 'Update dependency 4',
             head: {
               ref: 'dependabot-both-ignore-and-select'
             },
@@ -493,6 +493,21 @@ test('successfully runs the action with the select_label option', async () => {
               {
                 name: 'no-combine'
               },
+              {
+                name: 'please-combine'
+              }
+            ]
+          },
+          {
+            number: 5,
+            title: 'Update dependency 5',
+            head: {
+              ref: 'dependabot-only-select'
+            },
+            base: {
+              ref: 'main'
+            },
+            labels: [
               {
                 name: 'please-combine'
               }
