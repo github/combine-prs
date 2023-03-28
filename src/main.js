@@ -17,6 +17,9 @@ export async function run() {
   const token = core.getInput('github_token', {required: true})
   const prTitle = core.getInput('pr_title', {required: true})
   const prBodyHeader = core.getInput('pr_body_header', {required: true})
+  const minCombineNumber = parseInt(
+    core.getInput('min_combine_number', {required: true})
+  )
 
   // check for either prefix or regex
   if (branchPrefix === '' && branchRegex === '') {
@@ -131,9 +134,19 @@ export async function run() {
       baseBranchSHA = pull['base']['sha']
     }
   }
-  if (branchesAndPRStrings.length == 0) {
+
+  // If no branches match, exit
+  if (branchesAndPRStrings.length === 0) {
     core.info('No PRs/branches matched criteria')
     return 'No PRs/branches matched criteria'
+  }
+
+  // If not enough branches match given min_combine_number, exit
+  if (branchesAndPRStrings.length < minCombineNumber) {
+    core.info(
+      `Not enough PRs/branches matched criteria to create a combined PR - matched ${branchesAndPRStrings.length} branches/PRs but need ${minCombineNumber} branches/PRs`
+    )
+    return 'not enough PRs/branches matched criteria to create a combined PR'
   }
 
   // Create a new branch

@@ -41,6 +41,7 @@ beforeEach(() => {
   process.env.INPUT_IGNORE_LABEL = 'nocombine'
   process.env.INPUT_SELECT_LABEL = ''
   process.env.GITHUB_REPOSITORY = 'test-owner/test-repo'
+  process.env.INPUT_MIN_COMBINE_NUMBER = '2'
 
   jest.spyOn(github, 'getOctokit').mockImplementation(() => {
     return {
@@ -563,8 +564,8 @@ test('successfully runs the action with the select_label option', async () => {
             labels: []
           },
           {
-            number: 3,
-            title: 'Update dependency 3',
+            number: 4,
+            title: 'Update dependency 4',
             head: {
               ref: 'dependabot-both-ignore-and-select'
             },
@@ -575,6 +576,21 @@ test('successfully runs the action with the select_label option', async () => {
               {
                 name: 'no-combine'
               },
+              {
+                name: 'please-combine'
+              }
+            ]
+          },
+          {
+            number: 5,
+            title: 'Update dependency 5',
+            head: {
+              ref: 'dependabot-only-select'
+            },
+            base: {
+              ref: 'main'
+            },
+            labels: [
               {
                 name: 'please-combine'
               }
@@ -924,6 +940,49 @@ test('runs the action and finds the combine branch already exists and the PR als
     'Branch already exists - will try to merge into it'
   )
   expect(setOutputMock).toHaveBeenCalledWith('pr_number', 100)
+})
+
+test('runs the action and only one branch matches criteria', async () => {
+  jest.spyOn(github, 'getOctokit').mockImplementation(() => {
+    return {
+      paginate: jest.fn().mockImplementation(() => {
+        return [
+          {
+            number: 1,
+            head: {
+              ref: 'dependabot-only-branch'
+            },
+            base: {
+              ref: 'main'
+            },
+            labels: []
+          }
+        ]
+      }),
+      graphql: jest.fn().mockImplementation(() => {
+        return {
+          repository: {
+            pullRequest: {
+              commits: {
+                nodes: [
+                  {
+                    commit: {
+                      statusCheckRollup: {
+                        state: 'SUCCESS'
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      })
+    }
+  })
+  expect(await run()).toBe(
+    'not enough PRs/branches matched criteria to create a combined PR'
+  )
 })
 
 test('runs the action and does not find any branches to merge together', async () => {

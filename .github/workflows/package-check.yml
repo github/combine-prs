@@ -5,10 +5,10 @@ on:
     branches:
       - main
     paths-ignore:
-      - "**.md"
+      - '**.md'
   pull_request:
     paths-ignore:
-      - "**.md"
+      - '**.md'
   workflow_dispatch:
 
 jobs:
@@ -16,13 +16,20 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3.3.0
+      - uses: actions/checkout@v3.5.0
 
-      - name: Setup Node.js 18.x
+      # check the node version from the .node-version file
+      - name: fetch node version
+        id: node-version
+        run: |
+          version=$(cat .node-version)
+          echo "version=${version}" >> $GITHUB_OUTPUT
+
+      - name: setup node
         uses: actions/setup-node@v3.6.0
         with:
-          node-version: 18.x
-          cache: 'npm'
+          node-version: ${{ steps.node-version.outputs.version }}
+          cache: npm
 
       - name: Install dependencies
         run: npm ci
