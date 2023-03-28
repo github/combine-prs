@@ -47,91 +47,13 @@ beforeEach(() => {
     return {
       paginate: jest.fn().mockImplementation(() => {
         return [
-          {
-            number: 1,
-            title: 'Update dependency 1',
-            head: {
-              ref: 'dependabot-1'
-            },
-            base: {
-              ref: 'main'
-            },
-            labels: [
-              {
-                name: 'question'
-              }
-            ]
-          },
-          {
-            number: 2,
-            title: 'Update dependency 2',
-            head: {
-              ref: 'dependabot-2'
-            },
-            base: {
-              ref: 'main'
-            },
-            labels: []
-          },
-          {
-            number: 3,
-            title: 'Update dependency 3',
-            head: {
-              ref: 'dependabot-3'
-            },
-            base: {
-              ref: 'main'
-            },
-            labels: [
-              {
-                name: 'nocombine'
-              }
-            ]
-          },
-          {
-            number: 4,
-            title: 'Update dependency 4',
-            head: {
-              ref: 'dependabot-4'
-            },
-            base: {
-              ref: 'main'
-            },
-            labels: []
-          },
-          {
-            number: 5,
-            title: 'Update dependency 5',
-            head: {
-              ref: 'dependabot-5'
-            },
-            base: {
-              ref: 'main'
-            },
-            labels: []
-          },
-          {
-            number: 6,
-            title: 'Update dependency 6',
-            head: {
-              ref: 'dependabot-6'
-            },
-            base: {
-              ref: 'main'
-            },
-            labels: []
-          },
-          {
-            number: 7,
-            title: 'Update dependency 7',
-            head: {
-              ref: 'fix-package'
-            },
-            base: {
-              ref: 'main'
-            },
-            labels: []
-          }
+          buildPR(1, 'dependabot-1', ['question']),
+          buildPR(2, 'dependabot-2'),
+          buildPR(3, 'dependabot-3', ['nocombine']),
+          buildPR(4, 'dependabot-4'),
+          buildPR(5, 'dependabot-5'),
+          buildPR(6, 'dependabot-6'),
+          buildPR(7, 'fix-package')
         ]
       }),
       graphql: jest.fn().mockImplementation((_query, params) => {
@@ -324,36 +246,8 @@ test('label check does not override CI or review status', async () => {
     return {
       paginate: jest.fn().mockImplementation(() => {
         return [
-          {
-            number: 1,
-            title: 'Update dependency 1',
-            head: {
-              ref: 'dependabot-failed-ci'
-            },
-            base: {
-              ref: 'main'
-            },
-            labels: [
-              {
-                name: 'please-combine'
-              }
-            ]
-          },
-          {
-            number: 2,
-            title: 'Update dependency 2',
-            head: {
-              ref: 'dependabot-awaiting-review'
-            },
-            base: {
-              ref: 'main'
-            },
-            labels: [
-              {
-                name: 'please-combine'
-              }
-            ]
-          }
+          buildPR(1, 'dependabot-failed-ci', ['please-combine']),
+          buildPR(2, 'dependabot-awaiting-review', ['please-combine'])
         ]
       }),
       graphql: jest.fn().mockImplementation((_query, params) => {
@@ -400,86 +294,18 @@ test('successfully runs the action with the select_label option', async () => {
     return {
       paginate: jest.fn().mockImplementation(() => {
         return [
-          {
-            number: 1,
-            title: 'Update dependency 1',
-            head: {
-              ref: 'dependabot-random-label'
-            },
-            base: {
-              ref: 'main'
-            },
-            labels: [
-              {
-                name: 'some-random-label'
-              }
-            ]
-          },
-          {
-            number: 2,
-            title: 'Update dependency 2',
-            head: {
-              ref: 'dependabot-select-label'
-            },
-            base: {
-              ref: 'main'
-            },
-            labels: [
-              {
-                name: 'some-random-label'
-              },
-              {
-                name: 'please-combine'
-              },
-              {
-                name: 'another-label'
-              }
-            ]
-          },
-          {
-            number: 3,
-            title: 'Update dependency 3',
-            head: {
-              ref: 'dependabot-no-labels'
-            },
-            base: {
-              ref: 'main'
-            },
-            labels: []
-          },
-          {
-            number: 4,
-            title: 'Update dependency 4',
-            head: {
-              ref: 'dependabot-both-ignore-and-select'
-            },
-            base: {
-              ref: 'main'
-            },
-            labels: [
-              {
-                name: 'no-combine'
-              },
-              {
-                name: 'please-combine'
-              }
-            ]
-          },
-          {
-            number: 5,
-            title: 'Update dependency 5',
-            head: {
-              ref: 'dependabot-only-select'
-            },
-            base: {
-              ref: 'main'
-            },
-            labels: [
-              {
-                name: 'please-combine'
-              }
-            ]
-          }
+          buildPR(1, 'dependabot-random-label', ['some-random-label']),
+          buildPR(2, 'dependabot-select-label', [
+            'some-random-label',
+            'please-combine',
+            'another-label'
+          ]),
+          buildPR(3, 'dependabot-no-labels', []),
+          buildPR(4, 'dependabot-both-ignore-and-select', [
+            'no-combine',
+            'please-combine'
+          ]),
+          buildPR(5, 'dependabot-only-select', ['please-combine'])
         ]
       }),
       rest: {
@@ -558,34 +384,7 @@ test('runs the action and fails to create the combine branch', async () => {
   jest.spyOn(github, 'getOctokit').mockImplementation(() => {
     return {
       paginate: jest.fn().mockImplementation(() => {
-        return [
-          {
-            number: 1,
-            title: 'Update dependency 1',
-            head: {
-              ref: 'dependabot-1'
-            },
-            base: {
-              ref: 'main'
-            },
-            labels: [
-              {
-                name: 'question'
-              }
-            ]
-          },
-          {
-            number: 2,
-            title: 'Update dependency 2',
-            head: {
-              ref: 'dependabot-2'
-            },
-            base: {
-              ref: 'main'
-            },
-            labels: []
-          }
-        ]
+        return [buildPR(1, 'dependabot-1'), buildPR(2, 'dependabot-2')]
       }),
       graphql: jest.fn().mockImplementation(() => {
         return buildStatusResponse('APPROVED', 'SUCCESS')
@@ -621,34 +420,7 @@ test('runs the action and finds the combine branch already exists and the PR als
   jest.spyOn(github, 'getOctokit').mockImplementation(() => {
     return {
       paginate: jest.fn().mockImplementation(() => {
-        return [
-          {
-            number: 1,
-            title: 'Update dependency 1',
-            head: {
-              ref: 'dependabot-1'
-            },
-            base: {
-              ref: 'main'
-            },
-            labels: [
-              {
-                name: 'question'
-              }
-            ]
-          },
-          {
-            number: 2,
-            title: 'Update dependency 2',
-            head: {
-              ref: 'dependabot-2'
-            },
-            base: {
-              ref: 'main'
-            },
-            labels: []
-          }
-        ]
+        return [buildPR(1, 'dependabot-1'), buildPR(2, 'dependabot-2')]
       }),
       graphql: jest.fn().mockImplementation(() => {
         return buildStatusResponse('APPROVED', 'SUCCESS')
@@ -701,34 +473,7 @@ test('runs the action and finds the combine branch already exists and the PR als
   jest.spyOn(github, 'getOctokit').mockImplementation(() => {
     return {
       paginate: jest.fn().mockImplementation(() => {
-        return [
-          {
-            number: 1,
-            title: 'Update dependency 1',
-            head: {
-              ref: 'dependabot-1'
-            },
-            base: {
-              ref: 'main'
-            },
-            labels: [
-              {
-                name: 'question'
-              }
-            ]
-          },
-          {
-            number: 2,
-            title: 'Update dependency 2',
-            head: {
-              ref: 'dependabot-2'
-            },
-            base: {
-              ref: 'main'
-            },
-            labels: []
-          }
-        ]
+        return [buildPR(1, 'dependabot-1'), buildPR(2, 'dependabot-2')]
       }),
       graphql: jest.fn().mockImplementation(() => {
         return buildStatusResponse('APPROVED', 'SUCCESS')
@@ -782,18 +527,7 @@ test('runs the action and only one branch matches criteria', async () => {
   jest.spyOn(github, 'getOctokit').mockImplementation(() => {
     return {
       paginate: jest.fn().mockImplementation(() => {
-        return [
-          {
-            number: 1,
-            head: {
-              ref: 'dependabot-only-branch'
-            },
-            base: {
-              ref: 'main'
-            },
-            labels: []
-          }
-        ]
+        return [buildPR(1, 'dependabot-only-branch')]
       }),
       graphql: jest.fn().mockImplementation(() => {
         return buildStatusResponse('APPROVED', 'SUCCESS')
@@ -885,5 +619,21 @@ function buildStatusResponse(reviewDecision, ciStatus) {
         }
       }
     }
+  }
+}
+
+function buildPR(number, head, labels = [], base = null) {
+  return {
+    number: number,
+    title: `Update dependency ${number}`,
+    head: {
+      ref: head
+    },
+    base: {
+      ref: base ?? 'main'
+    },
+    labels: labels.map(labelName => {
+      return {name: labelName}
+    })
   }
 }
