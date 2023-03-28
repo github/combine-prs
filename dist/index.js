@@ -9998,6 +9998,11 @@ async function run() {
     return 'No PRs/branches matched criteria'
   }
 
+  if (branchesAndPRStrings.length == 1) {
+    _actions_core__WEBPACK_IMPORTED_MODULE_0__.info('Only one PR/branch matched criteria. No need to combine.')
+    return 'Only one PR/branch matched criteria. No need to combine.'
+  }
+
   // Create a new branch
   try {
     await octokit.rest.git.createRef({
