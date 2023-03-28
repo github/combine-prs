@@ -47,215 +47,33 @@ beforeEach(() => {
     return {
       paginate: jest.fn().mockImplementation(() => {
         return [
-          {
-            number: 1,
-            title: 'Update dependency 1',
-            head: {
-              ref: 'dependabot-1'
-            },
-            base: {
-              ref: 'main'
-            },
-            labels: [
-              {
-                name: 'question'
-              }
-            ]
-          },
-          {
-            number: 2,
-            title: 'Update dependency 2',
-            head: {
-              ref: 'dependabot-2'
-            },
-            base: {
-              ref: 'main'
-            },
-            labels: []
-          },
-          {
-            number: 3,
-            title: 'Update dependency 3',
-            head: {
-              ref: 'dependabot-3'
-            },
-            base: {
-              ref: 'main'
-            },
-            labels: [
-              {
-                name: 'nocombine'
-              }
-            ]
-          },
-          {
-            number: 4,
-            title: 'Update dependency 4',
-            head: {
-              ref: 'dependabot-4'
-            },
-            base: {
-              ref: 'main'
-            },
-            labels: []
-          },
-          {
-            number: 5,
-            title: 'Update dependency 5',
-            head: {
-              ref: 'dependabot-5'
-            },
-            base: {
-              ref: 'main'
-            },
-            labels: []
-          },
-          {
-            number: 6,
-            title: 'Update dependency 6',
-            head: {
-              ref: 'dependabot-6'
-            },
-            base: {
-              ref: 'main'
-            },
-            labels: []
-          },
-          {
-            number: 7,
-            title: 'Update dependency 7',
-            head: {
-              ref: 'fix-package'
-            },
-            base: {
-              ref: 'main'
-            },
-            labels: []
-          }
+          buildPR(1, 'dependabot-1', ['question']),
+          buildPR(2, 'dependabot-2'),
+          buildPR(3, 'dependabot-3', ['nocombine']),
+          buildPR(4, 'dependabot-4'),
+          buildPR(5, 'dependabot-5'),
+          buildPR(6, 'dependabot-6'),
+          buildPR(7, 'fix-package')
         ]
       }),
-      graphql: jest
-        .fn()
-        .mockImplementationOnce(() => {
-          return {
-            repository: {
-              pullRequest: {
-                reviewDecision: 'APPROVED',
-                commits: {
-                  nodes: [
-                    {
-                      commit: {
-                        statusCheckRollup: {
-                          state: 'SUCCESS'
-                        }
-                      }
-                    }
-                  ]
-                }
-              }
-            }
-          }
-        })
-        .mockImplementationOnce(() => {
-          return {
-            repository: {
-              pullRequest: {
-                reviewDecision: 'APPROVED',
-                commits: {
-                  nodes: [
-                    {
-                      commit: {
-                        statusCheckRollup: {
-                          state: 'SUCCESS'
-                        }
-                      }
-                    }
-                  ]
-                }
-              }
-            }
-          }
-        })
-        .mockImplementationOnce(() => {
-          return {
-            repository: {
-              pullRequest: {
-                reviewDecision: 'APPROVED',
-                commits: {
-                  nodes: [
-                    {
-                      commit: {
-                        statusCheckRollup: {
-                          state: 'SUCCESS'
-                        }
-                      }
-                    }
-                  ]
-                }
-              }
-            }
-          }
-        })
-        .mockImplementationOnce(() => {
-          return {
-            repository: {
-              pullRequest: {
-                reviewDecision: 'APPROVED',
-                commits: {
-                  nodes: [
-                    {
-                      commit: {
-                        statusCheckRollup: {
-                          state: 'FAILURE'
-                        }
-                      }
-                    }
-                  ]
-                }
-              }
-            }
-          }
-        })
-        .mockImplementationOnce(() => {
-          return {
-            repository: {
-              pullRequest: {
-                reviewDecision: null,
-                commits: {
-                  nodes: [
-                    {
-                      commit: {
-                        statusCheckRollup: {
-                          state: 'SUCCESS'
-                        }
-                      }
-                    }
-                  ]
-                }
-              }
-            }
-          }
-        })
-        .mockImplementationOnce(() => {
-          return {
-            repository: {
-              pullRequest: {
-                reviewDecision: 'REVIEW_REQUIRED',
-                commits: {
-                  nodes: [
-                    {
-                      commit: {
-                        statusCheckRollup: {
-                          state: 'SUCCESS'
-                        }
-                      }
-                    }
-                  ]
-                }
-              }
-            }
-          }
-        }),
+      graphql: jest.fn().mockImplementation((_query, params) => {
+        switch (params.pull_number) {
+          case 1:
+          case 2:
+          case 3:
+            return buildStatusResponse('APPROVED', 'SUCCESS')
+          case 4:
+            return buildStatusResponse('APPROVED', 'FAILURE')
+          case 5:
+            return buildStatusResponse(null, 'SUCCESS')
+          case 6:
+            return buildStatusResponse('REVIEW_REQUIRED', 'SUCCESS')
+          default:
+            throw new Error(
+              `params.pull_number of ${params.pull_number} is not configured.`
+            )
+        }
+      }),
       rest: {
         git: {
           createRef: jest.fn().mockReturnValueOnce({
@@ -305,10 +123,6 @@ test('successfully runs the action', async () => {
   expect(infoMock).toHaveBeenCalledWith('Branch dependabot-2 is approved')
   expect(infoMock).toHaveBeenCalledWith('Pull for branch: dependabot-3')
   expect(infoMock).toHaveBeenCalledWith('Branch matched prefix: dependabot-3')
-  expect(infoMock).toHaveBeenCalledWith('Checking green status: dependabot-3')
-  expect(infoMock).toHaveBeenCalledWith('Validating status: SUCCESS')
-  expect(infoMock).toHaveBeenCalledWith('Validating review decision: APPROVED')
-  expect(infoMock).toHaveBeenCalledWith('Branch dependabot-3 is approved')
   expect(infoMock).toHaveBeenCalledWith('Pull for branch: dependabot-4')
   expect(infoMock).toHaveBeenCalledWith('Branch matched prefix: dependabot-4')
   expect(infoMock).toHaveBeenCalledWith('Checking green status: dependabot-4')
@@ -374,10 +188,8 @@ test('successfully runs the action with the branch_regex option', async () => {
   expect(infoMock).toHaveBeenCalledWith('Branch dependabot-2 is approved')
   expect(infoMock).toHaveBeenCalledWith('Pull for branch: dependabot-3')
   expect(infoMock).toHaveBeenCalledWith('Branch matched regex: dependabot-3')
-  expect(infoMock).toHaveBeenCalledWith('Checking green status: dependabot-3')
   expect(infoMock).toHaveBeenCalledWith('Validating status: SUCCESS')
   expect(infoMock).toHaveBeenCalledWith('Validating review decision: APPROVED')
-  expect(infoMock).toHaveBeenCalledWith('Branch dependabot-3 is approved')
   expect(infoMock).toHaveBeenCalledWith('Pull for branch: dependabot-4')
   expect(infoMock).toHaveBeenCalledWith('Branch matched regex: dependabot-4')
   expect(infoMock).toHaveBeenCalledWith('Checking green status: dependabot-4')
@@ -425,6 +237,54 @@ test('successfully runs the action with the branch_regex option', async () => {
   )
 })
 
+test('label check does not override CI or review status', async () => {
+  process.env.INPUT_SELECT_LABEL = 'please-combine'
+  process.env.INPUT_CI_REQUIRED = 'true'
+  process.env.INPUT_REVIEW_REQUIRED = 'true'
+
+  jest.spyOn(github, 'getOctokit').mockImplementation(() => {
+    return {
+      paginate: jest.fn().mockImplementation(() => {
+        return [
+          buildPR(1, 'dependabot-failed-ci', ['please-combine']),
+          buildPR(2, 'dependabot-awaiting-review', ['please-combine'])
+        ]
+      }),
+      graphql: jest.fn().mockImplementation((_query, params) => {
+        switch (params.pull_number) {
+          case 1:
+            return buildStatusResponse('APPROVED', 'FAILURE')
+          case 2:
+            return buildStatusResponse('REVIEW_REQUIRED', 'SUCCESS')
+          default:
+            throw new Error(
+              `params.pull_number of ${params.pull_number} is not configured.`
+            )
+        }
+      }),
+      rest: {
+        git: {
+          createRef: jest.fn().mockReturnValueOnce({
+            data: {}
+          })
+        },
+        repos: {
+          merge: jest.fn().mockReturnValueOnce({
+            data: {}
+          })
+        },
+        pulls: {
+          create: jest.fn().mockReturnValueOnce({
+            data: {}
+          })
+        }
+      }
+    }
+  })
+
+  expect(await run()).toBe('No PRs/branches matched criteria')
+})
+
 test('successfully runs the action with the select_label option', async () => {
   process.env.INPUT_CI_REQUIRED = false // just to reduce needed mocks
   process.env.INPUT_IGNORE_LABEL = 'no-combine'
@@ -434,86 +294,18 @@ test('successfully runs the action with the select_label option', async () => {
     return {
       paginate: jest.fn().mockImplementation(() => {
         return [
-          {
-            number: 1,
-            title: 'Update dependency 1',
-            head: {
-              ref: 'dependabot-random-label'
-            },
-            base: {
-              ref: 'main'
-            },
-            labels: [
-              {
-                name: 'some-random-label'
-              }
-            ]
-          },
-          {
-            number: 2,
-            title: 'Update dependency 2',
-            head: {
-              ref: 'dependabot-select-label'
-            },
-            base: {
-              ref: 'main'
-            },
-            labels: [
-              {
-                name: 'some-random-label'
-              },
-              {
-                name: 'please-combine'
-              },
-              {
-                name: 'another-label'
-              }
-            ]
-          },
-          {
-            number: 3,
-            title: 'Update dependency 3',
-            head: {
-              ref: 'dependabot-no-labels'
-            },
-            base: {
-              ref: 'main'
-            },
-            labels: []
-          },
-          {
-            number: 4,
-            title: 'Update dependency 4',
-            head: {
-              ref: 'dependabot-both-ignore-and-select'
-            },
-            base: {
-              ref: 'main'
-            },
-            labels: [
-              {
-                name: 'no-combine'
-              },
-              {
-                name: 'please-combine'
-              }
-            ]
-          },
-          {
-            number: 5,
-            title: 'Update dependency 5',
-            head: {
-              ref: 'dependabot-only-select'
-            },
-            base: {
-              ref: 'main'
-            },
-            labels: [
-              {
-                name: 'please-combine'
-              }
-            ]
-          }
+          buildPR(1, 'dependabot-random-label', ['some-random-label']),
+          buildPR(2, 'dependabot-select-label', [
+            'some-random-label',
+            'please-combine',
+            'another-label'
+          ]),
+          buildPR(3, 'dependabot-no-labels', []),
+          buildPR(4, 'dependabot-both-ignore-and-select', [
+            'no-combine',
+            'please-combine'
+          ]),
+          buildPR(5, 'dependabot-only-select', ['please-combine'])
         ]
       }),
       rest: {
@@ -592,53 +384,10 @@ test('runs the action and fails to create the combine branch', async () => {
   jest.spyOn(github, 'getOctokit').mockImplementation(() => {
     return {
       paginate: jest.fn().mockImplementation(() => {
-        return [
-          {
-            number: 1,
-            title: 'Update dependency 1',
-            head: {
-              ref: 'dependabot-1'
-            },
-            base: {
-              ref: 'main'
-            },
-            labels: [
-              {
-                name: 'question'
-              }
-            ]
-          },
-          {
-            number: 2,
-            title: 'Update dependency 2',
-            head: {
-              ref: 'dependabot-2'
-            },
-            base: {
-              ref: 'main'
-            },
-            labels: []
-          }
-        ]
+        return [buildPR(1, 'dependabot-1'), buildPR(2, 'dependabot-2')]
       }),
       graphql: jest.fn().mockImplementation(() => {
-        return {
-          repository: {
-            pullRequest: {
-              commits: {
-                nodes: [
-                  {
-                    commit: {
-                      statusCheckRollup: {
-                        state: 'SUCCESS'
-                      }
-                    }
-                  }
-                ]
-              }
-            }
-          }
-        }
+        return buildStatusResponse('APPROVED', 'SUCCESS')
       }),
       rest: {
         issues: {
@@ -671,53 +420,10 @@ test('runs the action and finds the combine branch already exists and the PR als
   jest.spyOn(github, 'getOctokit').mockImplementation(() => {
     return {
       paginate: jest.fn().mockImplementation(() => {
-        return [
-          {
-            number: 1,
-            title: 'Update dependency 1',
-            head: {
-              ref: 'dependabot-1'
-            },
-            base: {
-              ref: 'main'
-            },
-            labels: [
-              {
-                name: 'question'
-              }
-            ]
-          },
-          {
-            number: 2,
-            title: 'Update dependency 2',
-            head: {
-              ref: 'dependabot-2'
-            },
-            base: {
-              ref: 'main'
-            },
-            labels: []
-          }
-        ]
+        return [buildPR(1, 'dependabot-1'), buildPR(2, 'dependabot-2')]
       }),
       graphql: jest.fn().mockImplementation(() => {
-        return {
-          repository: {
-            pullRequest: {
-              commits: {
-                nodes: [
-                  {
-                    commit: {
-                      statusCheckRollup: {
-                        state: 'SUCCESS'
-                      }
-                    }
-                  }
-                ]
-              }
-            }
-          }
-        }
+        return buildStatusResponse('APPROVED', 'SUCCESS')
       }),
       rest: {
         issues: {
@@ -767,53 +473,10 @@ test('runs the action and finds the combine branch already exists and the PR als
   jest.spyOn(github, 'getOctokit').mockImplementation(() => {
     return {
       paginate: jest.fn().mockImplementation(() => {
-        return [
-          {
-            number: 1,
-            title: 'Update dependency 1',
-            head: {
-              ref: 'dependabot-1'
-            },
-            base: {
-              ref: 'main'
-            },
-            labels: [
-              {
-                name: 'question'
-              }
-            ]
-          },
-          {
-            number: 2,
-            title: 'Update dependency 2',
-            head: {
-              ref: 'dependabot-2'
-            },
-            base: {
-              ref: 'main'
-            },
-            labels: []
-          }
-        ]
+        return [buildPR(1, 'dependabot-1'), buildPR(2, 'dependabot-2')]
       }),
       graphql: jest.fn().mockImplementation(() => {
-        return {
-          repository: {
-            pullRequest: {
-              commits: {
-                nodes: [
-                  {
-                    commit: {
-                      statusCheckRollup: {
-                        state: 'SUCCESS'
-                      }
-                    }
-                  }
-                ]
-              }
-            }
-          }
-        }
+        return buildStatusResponse('APPROVED', 'SUCCESS')
       }),
       rest: {
         issues: {
@@ -864,37 +527,10 @@ test('runs the action and only one branch matches criteria', async () => {
   jest.spyOn(github, 'getOctokit').mockImplementation(() => {
     return {
       paginate: jest.fn().mockImplementation(() => {
-        return [
-          {
-            number: 1,
-            head: {
-              ref: 'dependabot-only-branch'
-            },
-            base: {
-              ref: 'main'
-            },
-            labels: []
-          }
-        ]
+        return [buildPR(1, 'dependabot-only-branch')]
       }),
       graphql: jest.fn().mockImplementation(() => {
-        return {
-          repository: {
-            pullRequest: {
-              commits: {
-                nodes: [
-                  {
-                    commit: {
-                      statusCheckRollup: {
-                        state: 'SUCCESS'
-                      }
-                    }
-                  }
-                ]
-              }
-            }
-          }
-        }
+        return buildStatusResponse('APPROVED', 'SUCCESS')
       })
     }
   })
@@ -917,23 +553,7 @@ test('runs the action and does not find any branches to merge together', async (
         ]
       }),
       graphql: jest.fn().mockImplementation(() => {
-        return {
-          repository: {
-            pullRequest: {
-              commits: {
-                nodes: [
-                  {
-                    commit: {
-                      statusCheckRollup: {
-                        state: 'SUCCESS'
-                      }
-                    }
-                  }
-                ]
-              }
-            }
-          }
-        }
+        return buildStatusResponse('APPROVED', 'SUCCESS')
       }),
       rest: {
         issues: {
@@ -968,13 +588,52 @@ test('runs the action with no prefix or regex set', async () => {
 })
 
 test('runs the action when select_label and ignore_label have the same value', async () => {
-  process.env.INPUT_IGNORE_LABEL = ''
-  process.env.INPUT_SELECT_LABEL = ''
-  expect(await run()).toBe('success')
-
   process.env.INPUT_IGNORE_LABEL = 'some-label'
   process.env.INPUT_SELECT_LABEL = 'some-label'
   expect(await run()).toBe(
     'ignore_label and select_label cannot have the same value'
   )
 })
+
+test('ignore_label and select_label can both be empty', async () => {
+  process.env.INPUT_IGNORE_LABEL = ''
+  process.env.INPUT_SELECT_LABEL = ''
+  expect(await run()).toBe('success')
+})
+
+function buildStatusResponse(reviewDecision, ciStatus) {
+  return {
+    repository: {
+      pullRequest: {
+        reviewDecision: reviewDecision,
+        commits: {
+          nodes: [
+            {
+              commit: {
+                statusCheckRollup: {
+                  state: ciStatus
+                }
+              }
+            }
+          ]
+        }
+      }
+    }
+  }
+}
+
+function buildPR(number, head, labels = [], base = null) {
+  return {
+    number: number,
+    title: `Update dependency ${number}`,
+    head: {
+      ref: head
+    },
+    base: {
+      ref: base ?? 'main'
+    },
+    labels: labels.map(labelName => {
+      return {name: labelName}
+    })
+  }
+}
