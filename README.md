@@ -38,7 +38,7 @@ Here is a PR example of this Action:
 
 ![example](docs/assets/example.png)
 
-The Action ran on a cron, looked for all branches that had the `dependabot` prefix and then combined them into a single PR.
+The Action ran on a cron, looked for all branches that had the `dependabot` prefix and then combined them into a single PR. Three pull requests were successfully combined and one was left out due to merge conflicts.
 
 This allows us to deploy all the dependency updates at once rather than having to deploy each one individually.
 
