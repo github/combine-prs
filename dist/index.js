@@ -9840,6 +9840,9 @@ async function run() {
   const token = _actions_core__WEBPACK_IMPORTED_MODULE_0__.getInput('github_token', {required: true})
   const prTitle = _actions_core__WEBPACK_IMPORTED_MODULE_0__.getInput('pr_title', {required: true})
   const prBodyHeader = _actions_core__WEBPACK_IMPORTED_MODULE_0__.getInput('pr_body_header', {required: true})
+  const minCombineNumber = parseInt(
+    _actions_core__WEBPACK_IMPORTED_MODULE_0__.getInput('min_combine_number', {required: true})
+  )
 
   // check for either prefix or regex
   if (branchPrefix === '' && branchRegex === '') {
@@ -9993,9 +9996,19 @@ async function run() {
       baseBranchSHA = pull['base']['sha']
     }
   }
-  if (branchesAndPRStrings.length == 0) {
+
+  // If no branches match, exit
+  if (branchesAndPRStrings.length === 0) {
     _actions_core__WEBPACK_IMPORTED_MODULE_0__.info('No PRs/branches matched criteria')
     return 'No PRs/branches matched criteria'
+  }
+
+  // If not enough branches match given min_combine_number, exit
+  if (branchesAndPRStrings.length < minCombineNumber) {
+    _actions_core__WEBPACK_IMPORTED_MODULE_0__.info(
+      `Not enough PRs/branches matched criteria to create a combined PR - matched ${branchesAndPRStrings.length} branches/PRs but need ${minCombineNumber} branches/PRs`
+    )
+    return 'not enough PRs/branches matched criteria to create a combined PR'
   }
 
   // Create a new branch
