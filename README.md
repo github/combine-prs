@@ -14,7 +14,7 @@ This Action is customizable so you can use it for your own purposes and it doesn
 
 | Name | Description | Default | Required |
 | ---- | ----------- | ------- | -------- |
-| `github_token` | GitHub token to use for authentication within this Action | `${{ github.token }}` | `true` |
+| `github_token` | GitHub token to use for authentication within this Action. Provided for you by default! | `${{ github.token }}` | `true` |
 | `branch_prefix` | Prefix for the branch name to use for the combined PR | `dependabot` | `true` |
 | `pr_title` | The title of the pull request to create | `Combined PRs` | `true` |
 | `pr_body_header` | The header of the pull request body | `# Combined PRs ➡️📦⬅️` | `true` |
