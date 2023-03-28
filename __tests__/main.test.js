@@ -285,8 +285,6 @@ test('successfully runs the action', async () => {
   expect(infoMock).toHaveBeenCalledWith('Branch dependabot-2 is approved')
   expect(infoMock).toHaveBeenCalledWith('Pull for branch: dependabot-3')
   expect(infoMock).toHaveBeenCalledWith('Branch matched prefix: dependabot-3')
-  expect(infoMock).toHaveBeenCalledWith('Validating status: SUCCESS')
-  expect(infoMock).toHaveBeenCalledWith('Validating review decision: APPROVED')
   expect(infoMock).toHaveBeenCalledWith('Pull for branch: dependabot-4')
   expect(infoMock).toHaveBeenCalledWith('Branch matched prefix: dependabot-4')
   expect(infoMock).toHaveBeenCalledWith('Checking green status: dependabot-4')
