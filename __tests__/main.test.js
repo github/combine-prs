@@ -134,108 +134,24 @@ beforeEach(() => {
           }
         ]
       }),
-      graphql: jest
-        .fn()
-        .mockImplementationOnce(() => {
-          return {
-            repository: {
-              pullRequest: {
-                reviewDecision: 'APPROVED',
-                commits: {
-                  nodes: [
-                    {
-                      commit: {
-                        statusCheckRollup: {
-                          state: 'SUCCESS'
-                        }
-                      }
-                    }
-                  ]
-                }
-              }
-            }
-          }
-        })
-        .mockImplementationOnce(() => {
-          return {
-            repository: {
-              pullRequest: {
-                reviewDecision: 'APPROVED',
-                commits: {
-                  nodes: [
-                    {
-                      commit: {
-                        statusCheckRollup: {
-                          state: 'SUCCESS'
-                        }
-                      }
-                    }
-                  ]
-                }
-              }
-            }
-          }
-        })
-        .mockImplementationOnce(() => {
-          return {
-            repository: {
-              pullRequest: {
-                reviewDecision: 'APPROVED',
-                commits: {
-                  nodes: [
-                    {
-                      commit: {
-                        statusCheckRollup: {
-                          state: 'FAILURE'
-                        }
-                      }
-                    }
-                  ]
-                }
-              }
-            }
-          }
-        })
-        .mockImplementationOnce(() => {
-          return {
-            repository: {
-              pullRequest: {
-                reviewDecision: null,
-                commits: {
-                  nodes: [
-                    {
-                      commit: {
-                        statusCheckRollup: {
-                          state: 'SUCCESS'
-                        }
-                      }
-                    }
-                  ]
-                }
-              }
-            }
-          }
-        })
-        .mockImplementationOnce(() => {
-          return {
-            repository: {
-              pullRequest: {
-                reviewDecision: 'REVIEW_REQUIRED',
-                commits: {
-                  nodes: [
-                    {
-                      commit: {
-                        statusCheckRollup: {
-                          state: 'SUCCESS'
-                        }
-                      }
-                    }
-                  ]
-                }
-              }
-            }
-          }
-        }),
+      graphql: jest.fn().mockImplementation((_query, params) => {
+        switch (params.pull_number) {
+          case 1:
+          case 2:
+          case 3:
+            return buildStatusResponse('APPROVED', 'SUCCESS')
+          case 4:
+            return buildStatusResponse('APPROVED', 'FAILURE')
+          case 5:
+            return buildStatusResponse(null, 'SUCCESS')
+          case 6:
+            return buildStatusResponse('REVIEW_REQUIRED', 'SUCCESS')
+          default:
+            throw new Error(
+              `params.pull_number of ${params.pull_number} is not configured.`
+            )
+        }
+      }),
       rest: {
         git: {
           createRef: jest.fn().mockReturnValueOnce({
@@ -440,48 +356,18 @@ test('label check does not override CI or review status', async () => {
           }
         ]
       }),
-      graphql: jest
-        .fn()
-        .mockImplementationOnce(() => {
-          return {
-            repository: {
-              pullRequest: {
-                reviewDecision: 'APPROVED',
-                commits: {
-                  nodes: [
-                    {
-                      commit: {
-                        statusCheckRollup: {
-                          state: 'FAILURE'
-                        }
-                      }
-                    }
-                  ]
-                }
-              }
-            }
-          }
-        })
-        .mockImplementationOnce(() => {
-          return {
-            repository: {
-              pullRequest: {
-                reviewDecision: 'REVIEW_REQUIRED',
-                commits: {
-                  nodes: [
-                    {
-                      commit: {
-                        statusCheckRollup: {
-                          state: 'SUCCESS'
-                        }
-                      }
-                    }
-                  ]
-                }
-              }
-            }
-          }
-        }),
+      graphql: jest.fn().mockImplementation((_query, params) => {
+        switch (params.pull_number) {
+          case 1:
+            return buildStatusResponse('APPROVED', 'FAILURE')
+          case 2:
+            return buildStatusResponse('REVIEW_REQUIRED', 'SUCCESS')
+          default:
+            throw new Error(
+              `params.pull_number of ${params.pull_number} is not configured.`
+            )
+        }
+      }),
       rest: {
         git: {
           createRef: jest.fn().mockReturnValueOnce({
@@ -702,23 +588,7 @@ test('runs the action and fails to create the combine branch', async () => {
         ]
       }),
       graphql: jest.fn().mockImplementation(() => {
-        return {
-          repository: {
-            pullRequest: {
-              commits: {
-                nodes: [
-                  {
-                    commit: {
-                      statusCheckRollup: {
-                        state: 'SUCCESS'
-                      }
-                    }
-                  }
-                ]
-              }
-            }
-          }
-        }
+        return buildStatusResponse('APPROVED', 'SUCCESS')
       }),
       rest: {
         issues: {
@@ -781,23 +651,7 @@ test('runs the action and finds the combine branch already exists and the PR als
         ]
       }),
       graphql: jest.fn().mockImplementation(() => {
-        return {
-          repository: {
-            pullRequest: {
-              commits: {
-                nodes: [
-                  {
-                    commit: {
-                      statusCheckRollup: {
-                        state: 'SUCCESS'
-                      }
-                    }
-                  }
-                ]
-              }
-            }
-          }
-        }
+        return buildStatusResponse('APPROVED', 'SUCCESS')
       }),
       rest: {
         issues: {
@@ -877,23 +731,7 @@ test('runs the action and finds the combine branch already exists and the PR als
         ]
       }),
       graphql: jest.fn().mockImplementation(() => {
-        return {
-          repository: {
-            pullRequest: {
-              commits: {
-                nodes: [
-                  {
-                    commit: {
-                      statusCheckRollup: {
-                        state: 'SUCCESS'
-                      }
-                    }
-                  }
-                ]
-              }
-            }
-          }
-        }
+        return buildStatusResponse('APPROVED', 'SUCCESS')
       }),
       rest: {
         issues: {
@@ -958,23 +796,7 @@ test('runs the action and only one branch matches criteria', async () => {
         ]
       }),
       graphql: jest.fn().mockImplementation(() => {
-        return {
-          repository: {
-            pullRequest: {
-              commits: {
-                nodes: [
-                  {
-                    commit: {
-                      statusCheckRollup: {
-                        state: 'SUCCESS'
-                      }
-                    }
-                  }
-                ]
-              }
-            }
-          }
-        }
+        return buildStatusResponse('APPROVED', 'SUCCESS')
       })
     }
   })
@@ -997,23 +819,7 @@ test('runs the action and does not find any branches to merge together', async (
         ]
       }),
       graphql: jest.fn().mockImplementation(() => {
-        return {
-          repository: {
-            pullRequest: {
-              commits: {
-                nodes: [
-                  {
-                    commit: {
-                      statusCheckRollup: {
-                        state: 'SUCCESS'
-                      }
-                    }
-                  }
-                ]
-              }
-            }
-          }
-        }
+        return buildStatusResponse('APPROVED', 'SUCCESS')
       }),
       rest: {
         issues: {
@@ -1058,14 +864,26 @@ test('runs the action when select_label and ignore_label have the same value', a
 test('ignore_label and select_label can both be empty', async () => {
   process.env.INPUT_IGNORE_LABEL = ''
   process.env.INPUT_SELECT_LABEL = ''
-
-  jest.spyOn(github, 'getOctokit').mockImplementation(() => {
-    return {
-      paginate: jest.fn().mockImplementation(() => {
-        return []
-      })
-    }
-  })
-
-  expect(await run()).toBe('No PRs/branches matched criteria')
+  expect(await run()).toBe('success')
 })
+
+function buildStatusResponse(reviewDecision, ciStatus) {
+  return {
+    repository: {
+      pullRequest: {
+        reviewDecision: reviewDecision,
+        commits: {
+          nodes: [
+            {
+              commit: {
+                statusCheckRollup: {
+                  state: ciStatus
+                }
+              }
+            }
+          ]
+        }
+      }
+    }
+  }
+}
