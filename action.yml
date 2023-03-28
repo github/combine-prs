@@ -21,6 +21,10 @@ inputs:
     description: The header of the pull request body
     required: true
     default: "# Combined PRs ➡️📦⬅️"
+  min_combine_number:
+    description: The minimum number of PRs that have to match criteria in order to create a combined PR
+    required: true
+    default: "2"
   branch_regex:
     description: The regex to match the branches to combine - more control than branch_prefix
     required: false

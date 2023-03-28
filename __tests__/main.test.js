@@ -41,6 +41,7 @@ beforeEach(() => {
   process.env.INPUT_IGNORE_LABEL = 'nocombine'
   process.env.INPUT_SELECT_LABEL = ''
   process.env.GITHUB_REPOSITORY = 'test-owner/test-repo'
+  process.env.INPUT_MIN_COMBINE_NUMBER = '2'
 
   jest.spyOn(github, 'getOctokit').mockImplementation(() => {
     return {
@@ -894,32 +895,11 @@ test('runs the action and only one branch matches criteria', async () => {
             }
           }
         }
-      }),
-      rest: {
-        issues: {
-          createComment: jest.fn().mockReturnValueOnce({
-            data: {}
-          })
-        },
-        repos: {
-          createRef: jest.fn().mockReturnValueOnce({
-            data: {}
-          }),
-          merge: jest.fn().mockReturnValueOnce({
-            data: {}
-          })
-        },
-        pulls: {
-          create: jest.fn().mockReturnValueOnce({
-            data: {}
-          })
-        }
-      }
+      })
     }
   })
-
   expect(await run()).toBe(
-    'Only one PR/branch matched criteria. No need to combine.'
+    'not enough PRs/branches matched criteria to create a combined PR'
   )
 })
 
