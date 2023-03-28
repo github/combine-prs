@@ -69,7 +69,7 @@ export async function run() {
     }
 
     // Check labels
-    let statusOK = checkLabels(pull, branch, selectLabel, ignoreLabel)
+    let statusOK = await checkLabels(pull, branch, selectLabel, ignoreLabel)
 
     // Check CI status or review status if required
     if (statusOK && (mustBeGreen || mustBeApproved)) {
@@ -265,7 +265,7 @@ if (process.env.COMBINE_PRS_TEST !== 'true') {
   run()
 }
 
-function checkLabels(pull, branch, selectLabel, ignoreLabel) {
+async function checkLabels(pull, branch, selectLabel, ignoreLabel) {
   core.info('Checking labels: ' + branch)
   const labels = pull['labels']
 
