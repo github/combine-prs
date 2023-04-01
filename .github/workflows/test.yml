@@ -10,7 +10,7 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3.5.0
+      - uses: actions/checkout@v3
 
       # check the node version from the .node-version file
       - name: fetch node version
@@ -20,7 +20,7 @@ jobs:
           echo "version=${version}" >> $GITHUB_OUTPUT
 
       - name: setup node
-        uses: actions/setup-node@v3.6.0
+        uses: actions/setup-node@v3
         with:
           node-version: ${{ steps.node-version.outputs.version }}
           cache: npm
