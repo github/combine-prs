@@ -9993,7 +9993,7 @@ async function run() {
 
   _actions_core__WEBPACK_IMPORTED_MODULE_0__.debug('PR body: ' + body)
 
-  let pullRequest
+  var pullRequest
   try {
     pullRequest = await octokit.rest.pulls.create({
       owner: _actions_github__WEBPACK_IMPORTED_MODULE_1__.context.repo.owner,
@@ -10004,7 +10004,7 @@ async function run() {
       body: body
     })
   } catch (error) {
-    if (error.status == 422) {
+    if (error?.status === 422) {
       _actions_core__WEBPACK_IMPORTED_MODULE_0__.warning('Combined PR already exists')
       // update the PR body
       const prs = await octokit.rest.pulls.list({
@@ -10023,6 +10023,9 @@ async function run() {
         body: body
       })
       pullRequest = {data: pr}
+    } else {
+      _actions_core__WEBPACK_IMPORTED_MODULE_0__.setFailed(`Failed to create combined PR - ${error}`)
+      return 'failure'
     }
   }
 
