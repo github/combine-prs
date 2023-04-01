@@ -184,6 +184,16 @@ export async function run() {
       })
       pullRequest = {data: pr}
     } else {
+      if (
+        error?.message?.includes(
+          'GitHub Actions is not permitted to create or approve pull requests'
+        )
+      ) {
+        core.warning(
+          'https://github.blog/changelog/2022-05-03-github-actions-prevent-github-actions-from-creating-and-approving-pull-requests/'
+        )
+      }
+
       core.setFailed(`Failed to create combined PR - ${error}`)
       return 'failure'
     }

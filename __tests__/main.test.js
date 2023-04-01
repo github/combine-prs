@@ -495,7 +495,13 @@ test('runs the action and fails to create a pull request', async () => {
           })
         },
         pulls: {
-          create: jest.fn().mockRejectedValueOnce(new BigBadError('Oh no!')),
+          create: jest
+            .fn()
+            .mockRejectedValueOnce(
+              new BigBadError(
+                'GitHub Actions is not permitted to create or approve pull requests'
+              )
+            ),
           list: jest.fn().mockReturnValueOnce({
             data: [
               {
@@ -513,8 +519,12 @@ test('runs the action and fails to create a pull request', async () => {
 
   expect(await run()).toBe('failure')
 
+  expect(warningMock).toHaveBeenCalledWith(
+    'https://github.blog/changelog/2022-05-03-github-actions-prevent-github-actions-from-creating-and-approving-pull-requests/'
+  )
+
   expect(setFailedMock).toHaveBeenCalledWith(
-    'Failed to create combined PR - Error: Oh no!'
+    'Failed to create combined PR - Error: GitHub Actions is not permitted to create or approve pull requests'
   )
 })
 
