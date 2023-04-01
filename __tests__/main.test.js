@@ -469,6 +469,55 @@ test('runs the action and finds the combine branch already exists and the PR als
   expect(setOutputMock).toHaveBeenCalledWith('pr_number', 100)
 })
 
+test('runs the action and fails to create a pull request', async () => {
+  jest.spyOn(github, 'getOctokit').mockImplementation(() => {
+    return {
+      paginate: jest.fn().mockImplementation(() => {
+        return [buildPR(1, 'dependabot-1'), buildPR(2, 'dependabot-2')]
+      }),
+      graphql: jest.fn().mockImplementation(() => {
+        return buildStatusResponse('APPROVED', 'SUCCESS')
+      }),
+      rest: {
+        issues: {
+          createComment: jest.fn().mockReturnValueOnce({
+            data: {}
+          })
+        },
+        git: {
+          createRef: jest.fn().mockReturnValueOnce({
+            data: {}
+          })
+        },
+        repos: {
+          merge: jest.fn().mockReturnValueOnce({
+            data: {}
+          })
+        },
+        pulls: {
+          create: jest.fn().mockRejectedValueOnce(new BigBadError('Oh no!')),
+          list: jest.fn().mockReturnValueOnce({
+            data: [
+              {
+                number: 100
+              }
+            ]
+          }),
+          update: jest.fn().mockReturnValueOnce({
+            data: {}
+          })
+        }
+      }
+    }
+  })
+
+  expect(await run()).toBe('failure')
+
+  expect(setFailedMock).toHaveBeenCalledWith(
+    'Failed to create combined PR - Error: Oh no!'
+  )
+})
+
 test('runs the action and finds the combine branch already exists and the PR also exists and the PR is in a closed state', async () => {
   jest.spyOn(github, 'getOctokit').mockImplementation(() => {
     return {

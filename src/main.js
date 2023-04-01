@@ -153,7 +153,7 @@ export async function run() {
 
   core.debug('PR body: ' + body)
 
-  let pullRequest
+  var pullRequest
   try {
     pullRequest = await octokit.rest.pulls.create({
       owner: context.repo.owner,
@@ -164,7 +164,7 @@ export async function run() {
       body: body
     })
   } catch (error) {
-    if (error.status == 422) {
+    if (error?.status === 422) {
       core.warning('Combined PR already exists')
       // update the PR body
       const prs = await octokit.rest.pulls.list({
@@ -183,6 +183,9 @@ export async function run() {
         body: body
       })
       pullRequest = {data: pr}
+    } else {
+      core.setFailed(`Failed to create combined PR - ${error}`)
+      return 'failure'
     }
   }
 
