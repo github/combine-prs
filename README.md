@@ -84,6 +84,8 @@ permissions:
 
 This Action also requires that GitHub Action's has permissions to create new pull requests. You can read more about this feature here: [GitHub Blog Post](https://github.blog/changelog/2022-05-03-github-actions-prevent-github-actions-from-creating-and-approving-pull-requests/)
 
+To enable this setting, go to `Actions` > `General` > `Workflow permissions` in your repository settings. Check the following box and click save:
+
 ![permissions](docs/assets/actions-permissions.png)
 
 ## Regex Branch Patterns
