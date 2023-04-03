@@ -697,7 +697,7 @@ test('successfully runs the action and sets labels', async () => {
         issues: {
           addLabels: jest.fn().mockReturnValueOnce({
             data: {}
-          }),
+          })
         },
         git: {
           createRef: jest.fn().mockReturnValueOnce({
@@ -783,7 +783,9 @@ test('successfully runs the action and sets labels', async () => {
     'PR body: # Combined PRs ➡️📦⬅️\n\n✅ The following pull requests have been successfully combined on this PR:\n- #1 Update dependency 1\n- #5 Update dependency 5\n\n⚠️ The following PRs were left out due to merge conflicts:\n- #2 Update dependency 2\n\n> This PR was created by the [`github/combine-prs`](https://github.com/github/combine-prs) action'
   )
 
-  expect(infoMock).toHaveBeenCalledWith(`Adding labels to combined PR: label1,label2,label3`)
+  expect(infoMock).toHaveBeenCalledWith(
+    `Adding labels to combined PR: label1,label2,label3`
+  )
 
   expect(infoMock).toHaveBeenCalledWith(
     'Combined PR url: https://github.com/test-owner/test-repo/pull/100'
