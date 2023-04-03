@@ -1,6 +1,8 @@
 import * as core from '@actions/core'
 import * as github from '@actions/github'
 import {context} from '@actions/github'
+import {checkLabels} from './functions/check-labels'
+import {checkStatus} from './functions/check-status'
 
 const repoName = 'github/combine-prs'
 const repoUrl = 'https://github.com/github/combine-prs'
@@ -14,6 +16,7 @@ export async function run() {
   const combineBranchName = core.getInput('combine_branch_name')
   const ignoreLabel = core.getInput('ignore_label')
   const selectLabel = core.getInput('select_label')
+  const labels = core.getInput('labels').trim()
   const token = core.getInput('github_token', {required: true})
   const prTitle = core.getInput('pr_title', {required: true})
   const prBodyHeader = core.getInput('pr_body_header', {required: true})
@@ -211,6 +214,22 @@ export async function run() {
     })
   }
 
+  if (labels !== '') {
+    // split and trim labels
+    const labelsArray = labels.split(',').map(label => label.trim())
+
+    // add labels to the combined PR if specified
+    if (labelsArray.length > 0) {
+      core.info(`Adding labels to combined PR: ${labelsArray}`)
+      await octokit.rest.issues.addLabels({
+        owner: context.repo.owner,
+        repo: context.repo.repo,
+        issue_number: pullRequest.data.number,
+        labels: labelsArray
+      })
+    }
+  }
+
   // output pull request url
   core.info('Combined PR url: ' + pullRequest.data.html_url)
   core.setOutput('pr_url', pullRequest.data.html_url)
@@ -226,104 +245,4 @@ export async function run() {
 if (process.env.COMBINE_PRS_TEST !== 'true') {
   /* istanbul ignore next */
   run()
-}
-
-async function checkLabels(pull, branch, selectLabel, ignoreLabel) {
-  core.info('Checking labels: ' + branch)
-  const labels = pull['labels']
-
-  if (selectLabel) {
-    let matchesSelectLabel = false
-    for (const label of labels) {
-      const labelName = label['name']
-      core.info('Checking select_label for: ' + labelName)
-      if (labelName == selectLabel) {
-        matchesSelectLabel = true
-        break
-      }
-    }
-    if (!matchesSelectLabel) {
-      core.info(
-        'Discarding ' + branch + ' because it does not match select_label'
-      )
-      return false
-    }
-  }
-
-  if (ignoreLabel) {
-    for (const label of labels) {
-      const labelName = label['name']
-      core.info('Checking ignore_label for: ' + labelName)
-      if (labelName == ignoreLabel) {
-        core.info(
-          'Discarding ' +
-            branch +
-            ' with label ' +
-            labelName +
-            ' because it matches ignore_label'
-        )
-        return false
-      }
-    }
-  }
-
-  return true
-}
-
-async function checkStatus(pull, branch, octokit, mustBeGreen, mustBeApproved) {
-  let statusOK = true
-  if (mustBeGreen || mustBeApproved) {
-    core.info('Checking green status: ' + branch)
-    const stateQuery = `query($owner: String!, $repo: String!, $pull_number: Int!) {
-                  repository(owner: $owner, name: $repo) {
-                    pullRequest(number:$pull_number) {
-                      reviewDecision
-                      commits(last: 1) {
-                        nodes {
-                          commit {
-                            statusCheckRollup {
-                              state
-                            }
-                          }
-                        }
-                      }
-                    }
-                  }
-                }`
-    const vars = {
-      owner: context.repo.owner,
-      repo: context.repo.repo,
-      pull_number: pull['number']
-    }
-    const result = await octokit.graphql(stateQuery, vars)
-
-    // Check for CI status
-    if (mustBeGreen) {
-      const [{commit}] = result.repository.pullRequest.commits.nodes
-      const state = commit.statusCheckRollup.state
-      core.info('Validating status: ' + state)
-      if (state !== 'SUCCESS') {
-        core.info('Discarding ' + branch + ' with status ' + state)
-        statusOK = false
-      }
-    }
-
-    // Check for review approval
-    if (mustBeApproved) {
-      const reviewDecision = result.repository.pullRequest.reviewDecision
-      core.info('Validating review decision: ' + reviewDecision)
-      if (reviewDecision === 'APPROVED') {
-        core.info('Branch ' + branch + ' is approved')
-      } else if (reviewDecision === null) {
-        // In this case, reviewDecision will be null if no reviews are required
-        core.info('Branch ' + branch + ' has no required reviewers - OK')
-      } else {
-        core.info(
-          'Discarding ' + branch + ' with review decision ' + reviewDecision
-        )
-        statusOK = false
-      }
-    }
-  }
-  return statusOK
 }

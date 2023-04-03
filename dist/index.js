@@ -9781,18 +9781,6 @@ module.exports = JSON.parse('[[[0,44],"disallowed_STD3_valid"],[[45,46],"valid"]
 /******/ 	}
 /******/ 	
 /************************************************************************/
-/******/ 	/* webpack/runtime/compat get default export */
-/******/ 	(() => {
-/******/ 		// getDefaultExport function for compatibility with non-harmony modules
-/******/ 		__nccwpck_require__.n = (module) => {
-/******/ 			var getter = module && module.__esModule ?
-/******/ 				() => (module['default']) :
-/******/ 				() => (module);
-/******/ 			__nccwpck_require__.d(getter, { a: getter });
-/******/ 			return getter;
-/******/ 		};
-/******/ 	})();
-/******/ 	
 /******/ 	/* webpack/runtime/define property getters */
 /******/ 	(() => {
 /******/ 		// define getter functions for harmony exports
@@ -9830,260 +9818,37 @@ var __webpack_exports__ = {};
 // This entry need to be wrapped in an IIFE because it need to be in strict mode.
 (() => {
 "use strict";
+// ESM COMPAT FLAG
 __nccwpck_require__.r(__webpack_exports__);
-/* harmony export */ __nccwpck_require__.d(__webpack_exports__, {
-/* harmony export */   "run": () => (/* binding */ run)
-/* harmony export */ });
-/* harmony import */ var _actions_core__WEBPACK_IMPORTED_MODULE_0__ = __nccwpck_require__(2186);
-/* harmony import */ var _actions_core__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__nccwpck_require__.n(_actions_core__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var _actions_github__WEBPACK_IMPORTED_MODULE_1__ = __nccwpck_require__(5438);
-/* harmony import */ var _actions_github__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__nccwpck_require__.n(_actions_github__WEBPACK_IMPORTED_MODULE_1__);
 
+// EXPORTS
+__nccwpck_require__.d(__webpack_exports__, {
+  "run": () => (/* binding */ run)
+});
 
+// EXTERNAL MODULE: ./node_modules/@actions/core/lib/core.js
+var core = __nccwpck_require__(2186);
+// EXTERNAL MODULE: ./node_modules/@actions/github/lib/github.js
+var github = __nccwpck_require__(5438);
+;// CONCATENATED MODULE: ./src/functions/check-labels.js
 
-
-const repoName = 'github/combine-prs'
-const repoUrl = 'https://github.com/github/combine-prs'
-
-async function run() {
-  // Get configuration inputs
-  const branchPrefix = _actions_core__WEBPACK_IMPORTED_MODULE_0__.getInput('branch_prefix')
-  const branchRegex = _actions_core__WEBPACK_IMPORTED_MODULE_0__.getInput('branch_regex')
-  const mustBeGreen = _actions_core__WEBPACK_IMPORTED_MODULE_0__.getInput('ci_required') === 'true'
-  const mustBeApproved = _actions_core__WEBPACK_IMPORTED_MODULE_0__.getInput('review_required') === 'true'
-  const combineBranchName = _actions_core__WEBPACK_IMPORTED_MODULE_0__.getInput('combine_branch_name')
-  const ignoreLabel = _actions_core__WEBPACK_IMPORTED_MODULE_0__.getInput('ignore_label')
-  const selectLabel = _actions_core__WEBPACK_IMPORTED_MODULE_0__.getInput('select_label')
-  const token = _actions_core__WEBPACK_IMPORTED_MODULE_0__.getInput('github_token', {required: true})
-  const prTitle = _actions_core__WEBPACK_IMPORTED_MODULE_0__.getInput('pr_title', {required: true})
-  const prBodyHeader = _actions_core__WEBPACK_IMPORTED_MODULE_0__.getInput('pr_body_header', {required: true})
-  const minCombineNumber = parseInt(
-    _actions_core__WEBPACK_IMPORTED_MODULE_0__.getInput('min_combine_number', {required: true})
-  )
-
-  // check for either prefix or regex
-  if (branchPrefix === '' && branchRegex === '') {
-    _actions_core__WEBPACK_IMPORTED_MODULE_0__.setFailed('Must specify either branch_prefix or branch_regex')
-    return 'Must specify either branch_prefix or branch_regex'
-  }
-
-  // check valid label config
-  if (ignoreLabel && selectLabel && ignoreLabel == selectLabel) {
-    _actions_core__WEBPACK_IMPORTED_MODULE_0__.setFailed('ignore_label and select_label cannot have the same value')
-    return 'ignore_label and select_label cannot have the same value'
-  }
-
-  // Create a octokit GitHub client
-  const octokit = _actions_github__WEBPACK_IMPORTED_MODULE_1__.getOctokit(token)
-
-  // Get all open pull requests in the repository
-  const pulls = await octokit.paginate('GET /repos/:owner/:repo/pulls', {
-    owner: _actions_github__WEBPACK_IMPORTED_MODULE_1__.context.repo.owner,
-    repo: _actions_github__WEBPACK_IMPORTED_MODULE_1__.context.repo.repo
-  })
-
-  // Filter the pull requests by branch prefix and CI status
-  let branchesAndPRStrings = []
-  let baseBranch = null
-  let baseBranchSHA = null
-  for (const pull of pulls) {
-    const branch = pull['head']['ref']
-    _actions_core__WEBPACK_IMPORTED_MODULE_0__.info('Pull for branch: ' + branch)
-
-    // Check branch with branch_regex
-    if (branchRegex !== '') {
-      const regex = new RegExp(branchRegex)
-      if (regex.test(branch)) {
-        _actions_core__WEBPACK_IMPORTED_MODULE_0__.info('Branch matched regex: ' + branch)
-      } else {
-        _actions_core__WEBPACK_IMPORTED_MODULE_0__.info('Branch did not match regex: ' + branch)
-        continue
-      }
-    } else {
-      // If no regex, check branch with branch_prefix
-      if (branch.startsWith(branchPrefix)) {
-        _actions_core__WEBPACK_IMPORTED_MODULE_0__.info('Branch matched prefix: ' + branch)
-      } else {
-        continue
-      }
-    }
-
-    // Check labels
-    let statusOK = await checkLabels(pull, branch, selectLabel, ignoreLabel)
-
-    // Check CI status or review status if required
-    statusOK =
-      statusOK &&
-      (await checkStatus(pull, branch, octokit, mustBeGreen, mustBeApproved))
-
-    if (statusOK) {
-      _actions_core__WEBPACK_IMPORTED_MODULE_0__.info('Adding branch to array: ' + branch)
-      const prString = '#' + pull['number'] + ' ' + pull['title']
-      branchesAndPRStrings.push({branch, prString})
-      baseBranch = pull['base']['ref']
-      baseBranchSHA = pull['base']['sha']
-    }
-  }
-
-  // If no branches match, exit
-  if (branchesAndPRStrings.length === 0) {
-    _actions_core__WEBPACK_IMPORTED_MODULE_0__.info('No PRs/branches matched criteria')
-    return 'No PRs/branches matched criteria'
-  }
-
-  // If not enough branches match given min_combine_number, exit
-  if (branchesAndPRStrings.length < minCombineNumber) {
-    _actions_core__WEBPACK_IMPORTED_MODULE_0__.info(
-      `Not enough PRs/branches matched criteria to create a combined PR - matched ${branchesAndPRStrings.length} branches/PRs but need ${minCombineNumber} branches/PRs`
-    )
-    return 'not enough PRs/branches matched criteria to create a combined PR'
-  }
-
-  // Create a new branch
-  try {
-    await octokit.rest.git.createRef({
-      owner: _actions_github__WEBPACK_IMPORTED_MODULE_1__.context.repo.owner,
-      repo: _actions_github__WEBPACK_IMPORTED_MODULE_1__.context.repo.repo,
-      ref: 'refs/heads/' + combineBranchName,
-      sha: baseBranchSHA
-    })
-  } catch (error) {
-    // If the branch already exists, we'll try to merge into it
-    if (error.status == 422) {
-      _actions_core__WEBPACK_IMPORTED_MODULE_0__.warning('Branch already exists - will try to merge into it')
-    } else {
-      // Otherwise, fail the Action
-      _actions_core__WEBPACK_IMPORTED_MODULE_0__.error(error)
-      _actions_core__WEBPACK_IMPORTED_MODULE_0__.setFailed('Failed to create combined branch')
-      return 'Failed to create combined branch'
-    }
-  }
-
-  // Merge all branches into the new branch
-  let combinedPRs = []
-  let mergeFailedPRs = []
-  for (const {branch, prString} of branchesAndPRStrings) {
-    try {
-      await octokit.rest.repos.merge({
-        owner: _actions_github__WEBPACK_IMPORTED_MODULE_1__.context.repo.owner,
-        repo: _actions_github__WEBPACK_IMPORTED_MODULE_1__.context.repo.repo,
-        base: combineBranchName,
-        head: branch
-      })
-      _actions_core__WEBPACK_IMPORTED_MODULE_0__.info('Merged branch ' + branch)
-      combinedPRs.push(prString)
-    } catch (error) {
-      _actions_core__WEBPACK_IMPORTED_MODULE_0__.warning('Failed to merge branch ' + branch)
-      mergeFailedPRs.push(prString)
-    }
-  }
-
-  // Create a new PR with the combined branch
-  _actions_core__WEBPACK_IMPORTED_MODULE_0__.info('Creating combined PR')
-  const combinedPRsString = `- ${combinedPRs.join('\n- ')}`
-  let body = `${prBodyHeader}\n\n✅ The following pull requests have been successfully combined on this PR:\n${combinedPRsString}`
-  if (mergeFailedPRs.length > 0) {
-    const mergeFailedPRsString = `- ${mergeFailedPRs.join('\n- ')}`
-    body +=
-      '\n\n⚠️ The following PRs were left out due to merge conflicts:\n' +
-      mergeFailedPRsString
-  }
-
-  body += `\n\n> This PR was created by the [\`${repoName}\`](${repoUrl}) action`
-
-  _actions_core__WEBPACK_IMPORTED_MODULE_0__.debug('PR body: ' + body)
-
-  var pullRequest
-  try {
-    pullRequest = await octokit.rest.pulls.create({
-      owner: _actions_github__WEBPACK_IMPORTED_MODULE_1__.context.repo.owner,
-      repo: _actions_github__WEBPACK_IMPORTED_MODULE_1__.context.repo.repo,
-      title: prTitle,
-      head: combineBranchName,
-      base: baseBranch,
-      body: body
-    })
-  } catch (error) {
-    if (error?.status === 422) {
-      _actions_core__WEBPACK_IMPORTED_MODULE_0__.warning('Combined PR already exists')
-      // update the PR body
-      const prs = await octokit.rest.pulls.list({
-        owner: _actions_github__WEBPACK_IMPORTED_MODULE_1__.context.repo.owner,
-        repo: _actions_github__WEBPACK_IMPORTED_MODULE_1__.context.repo.repo,
-        head: _actions_github__WEBPACK_IMPORTED_MODULE_1__.context.repo.owner + ':' + combineBranchName,
-        base: baseBranch,
-        state: 'open'
-      })
-      const pr = prs.data[0]
-      _actions_core__WEBPACK_IMPORTED_MODULE_0__.info('Updating PR body')
-      await octokit.rest.pulls.update({
-        owner: _actions_github__WEBPACK_IMPORTED_MODULE_1__.context.repo.owner,
-        repo: _actions_github__WEBPACK_IMPORTED_MODULE_1__.context.repo.repo,
-        pull_number: pr.number,
-        body: body
-      })
-      pullRequest = {data: pr}
-    } else {
-      if (
-        error?.message?.includes(
-          'GitHub Actions is not permitted to create or approve pull requests'
-        )
-      ) {
-        _actions_core__WEBPACK_IMPORTED_MODULE_0__.warning(
-          'https://github.blog/changelog/2022-05-03-github-actions-prevent-github-actions-from-creating-and-approving-pull-requests/'
-        )
-      }
-
-      _actions_core__WEBPACK_IMPORTED_MODULE_0__.setFailed(`Failed to create combined PR - ${error}`)
-      return 'failure'
-    }
-  }
-
-  // check the combined PR's state to see if it is closed
-  const combinedPRState = pullRequest.data.state
-  if (combinedPRState === 'closed') {
-    _actions_core__WEBPACK_IMPORTED_MODULE_0__.info('Combined PR is closed - attempting to reopen')
-    await octokit.rest.pulls.update({
-      owner: _actions_github__WEBPACK_IMPORTED_MODULE_1__.context.repo.owner,
-      repo: _actions_github__WEBPACK_IMPORTED_MODULE_1__.context.repo.repo,
-      pull_number: pullRequest.data.number,
-      state: 'open'
-    })
-  }
-
-  // output pull request url
-  _actions_core__WEBPACK_IMPORTED_MODULE_0__.info('Combined PR url: ' + pullRequest.data.html_url)
-  _actions_core__WEBPACK_IMPORTED_MODULE_0__.setOutput('pr_url', pullRequest.data.html_url)
-
-  // output pull request number
-  _actions_core__WEBPACK_IMPORTED_MODULE_0__.info('Combined PR number: ' + pullRequest.data.number)
-  _actions_core__WEBPACK_IMPORTED_MODULE_0__.setOutput('pr_number', pullRequest.data.number)
-
-  return 'success'
-}
-
-// Do not run if this is a test
-if (process.env.COMBINE_PRS_TEST !== 'true') {
-  /* istanbul ignore next */
-  run()
-}
 
 async function checkLabels(pull, branch, selectLabel, ignoreLabel) {
-  _actions_core__WEBPACK_IMPORTED_MODULE_0__.info('Checking labels: ' + branch)
+  core.info('Checking labels: ' + branch)
   const labels = pull['labels']
 
   if (selectLabel) {
     let matchesSelectLabel = false
     for (const label of labels) {
       const labelName = label['name']
-      _actions_core__WEBPACK_IMPORTED_MODULE_0__.info('Checking select_label for: ' + labelName)
+      core.info('Checking select_label for: ' + labelName)
       if (labelName == selectLabel) {
         matchesSelectLabel = true
         break
       }
     }
     if (!matchesSelectLabel) {
-      _actions_core__WEBPACK_IMPORTED_MODULE_0__.info(
+      core.info(
         'Discarding ' + branch + ' because it does not match select_label'
       )
       return false
@@ -10093,9 +9858,9 @@ async function checkLabels(pull, branch, selectLabel, ignoreLabel) {
   if (ignoreLabel) {
     for (const label of labels) {
       const labelName = label['name']
-      _actions_core__WEBPACK_IMPORTED_MODULE_0__.info('Checking ignore_label for: ' + labelName)
+      core.info('Checking ignore_label for: ' + labelName)
       if (labelName == ignoreLabel) {
-        _actions_core__WEBPACK_IMPORTED_MODULE_0__.info(
+        core.info(
           'Discarding ' +
             branch +
             ' with label ' +
@@ -10110,29 +9875,39 @@ async function checkLabels(pull, branch, selectLabel, ignoreLabel) {
   return true
 }
 
-async function checkStatus(pull, branch, octokit, mustBeGreen, mustBeApproved) {
+;// CONCATENATED MODULE: ./src/functions/check-status.js
+
+
+
+async function checkStatus(
+  pull,
+  branch,
+  octokit,
+  mustBeGreen,
+  mustBeApproved
+) {
   let statusOK = true
   if (mustBeGreen || mustBeApproved) {
-    _actions_core__WEBPACK_IMPORTED_MODULE_0__.info('Checking green status: ' + branch)
+    core.info('Checking green status: ' + branch)
     const stateQuery = `query($owner: String!, $repo: String!, $pull_number: Int!) {
-                  repository(owner: $owner, name: $repo) {
-                    pullRequest(number:$pull_number) {
-                      reviewDecision
-                      commits(last: 1) {
-                        nodes {
-                          commit {
-                            statusCheckRollup {
-                              state
+                    repository(owner: $owner, name: $repo) {
+                      pullRequest(number:$pull_number) {
+                        reviewDecision
+                        commits(last: 1) {
+                          nodes {
+                            commit {
+                              statusCheckRollup {
+                                state
+                              }
                             }
                           }
                         }
                       }
                     }
-                  }
-                }`
+                  }`
     const vars = {
-      owner: _actions_github__WEBPACK_IMPORTED_MODULE_1__.context.repo.owner,
-      repo: _actions_github__WEBPACK_IMPORTED_MODULE_1__.context.repo.repo,
+      owner: github.context.repo.owner,
+      repo: github.context.repo.repo,
       pull_number: pull['number']
     }
     const result = await octokit.graphql(stateQuery, vars)
@@ -10141,9 +9916,9 @@ async function checkStatus(pull, branch, octokit, mustBeGreen, mustBeApproved) {
     if (mustBeGreen) {
       const [{commit}] = result.repository.pullRequest.commits.nodes
       const state = commit.statusCheckRollup.state
-      _actions_core__WEBPACK_IMPORTED_MODULE_0__.info('Validating status: ' + state)
+      core.info('Validating status: ' + state)
       if (state !== 'SUCCESS') {
-        _actions_core__WEBPACK_IMPORTED_MODULE_0__.info('Discarding ' + branch + ' with status ' + state)
+        core.info('Discarding ' + branch + ' with status ' + state)
         statusOK = false
       }
     }
@@ -10151,14 +9926,14 @@ async function checkStatus(pull, branch, octokit, mustBeGreen, mustBeApproved) {
     // Check for review approval
     if (mustBeApproved) {
       const reviewDecision = result.repository.pullRequest.reviewDecision
-      _actions_core__WEBPACK_IMPORTED_MODULE_0__.info('Validating review decision: ' + reviewDecision)
+      core.info('Validating review decision: ' + reviewDecision)
       if (reviewDecision === 'APPROVED') {
-        _actions_core__WEBPACK_IMPORTED_MODULE_0__.info('Branch ' + branch + ' is approved')
+        core.info('Branch ' + branch + ' is approved')
       } else if (reviewDecision === null) {
         // In this case, reviewDecision will be null if no reviews are required
-        _actions_core__WEBPACK_IMPORTED_MODULE_0__.info('Branch ' + branch + ' has no required reviewers - OK')
+        core.info('Branch ' + branch + ' has no required reviewers - OK')
       } else {
-        _actions_core__WEBPACK_IMPORTED_MODULE_0__.info(
+        core.info(
           'Discarding ' + branch + ' with review decision ' + reviewDecision
         )
         statusOK = false
@@ -10166,6 +9941,256 @@ async function checkStatus(pull, branch, octokit, mustBeGreen, mustBeApproved) {
     }
   }
   return statusOK
+}
+
+;// CONCATENATED MODULE: ./src/main.js
+
+
+
+
+
+
+const repoName = 'github/combine-prs'
+const repoUrl = 'https://github.com/github/combine-prs'
+
+async function run() {
+  // Get configuration inputs
+  const branchPrefix = core.getInput('branch_prefix')
+  const branchRegex = core.getInput('branch_regex')
+  const mustBeGreen = core.getInput('ci_required') === 'true'
+  const mustBeApproved = core.getInput('review_required') === 'true'
+  const combineBranchName = core.getInput('combine_branch_name')
+  const ignoreLabel = core.getInput('ignore_label')
+  const selectLabel = core.getInput('select_label')
+  const labels = core.getInput('labels').trim()
+  const token = core.getInput('github_token', {required: true})
+  const prTitle = core.getInput('pr_title', {required: true})
+  const prBodyHeader = core.getInput('pr_body_header', {required: true})
+  const minCombineNumber = parseInt(
+    core.getInput('min_combine_number', {required: true})
+  )
+
+  // check for either prefix or regex
+  if (branchPrefix === '' && branchRegex === '') {
+    core.setFailed('Must specify either branch_prefix or branch_regex')
+    return 'Must specify either branch_prefix or branch_regex'
+  }
+
+  // check valid label config
+  if (ignoreLabel && selectLabel && ignoreLabel == selectLabel) {
+    core.setFailed('ignore_label and select_label cannot have the same value')
+    return 'ignore_label and select_label cannot have the same value'
+  }
+
+  // Create a octokit GitHub client
+  const octokit = github.getOctokit(token)
+
+  // Get all open pull requests in the repository
+  const pulls = await octokit.paginate('GET /repos/:owner/:repo/pulls', {
+    owner: github.context.repo.owner,
+    repo: github.context.repo.repo
+  })
+
+  // Filter the pull requests by branch prefix and CI status
+  let branchesAndPRStrings = []
+  let baseBranch = null
+  let baseBranchSHA = null
+  for (const pull of pulls) {
+    const branch = pull['head']['ref']
+    core.info('Pull for branch: ' + branch)
+
+    // Check branch with branch_regex
+    if (branchRegex !== '') {
+      const regex = new RegExp(branchRegex)
+      if (regex.test(branch)) {
+        core.info('Branch matched regex: ' + branch)
+      } else {
+        core.info('Branch did not match regex: ' + branch)
+        continue
+      }
+    } else {
+      // If no regex, check branch with branch_prefix
+      if (branch.startsWith(branchPrefix)) {
+        core.info('Branch matched prefix: ' + branch)
+      } else {
+        continue
+      }
+    }
+
+    // Check labels
+    let statusOK = await checkLabels(pull, branch, selectLabel, ignoreLabel)
+
+    // Check CI status or review status if required
+    statusOK =
+      statusOK &&
+      (await checkStatus(pull, branch, octokit, mustBeGreen, mustBeApproved))
+
+    if (statusOK) {
+      core.info('Adding branch to array: ' + branch)
+      const prString = '#' + pull['number'] + ' ' + pull['title']
+      branchesAndPRStrings.push({branch, prString})
+      baseBranch = pull['base']['ref']
+      baseBranchSHA = pull['base']['sha']
+    }
+  }
+
+  // If no branches match, exit
+  if (branchesAndPRStrings.length === 0) {
+    core.info('No PRs/branches matched criteria')
+    return 'No PRs/branches matched criteria'
+  }
+
+  // If not enough branches match given min_combine_number, exit
+  if (branchesAndPRStrings.length < minCombineNumber) {
+    core.info(
+      `Not enough PRs/branches matched criteria to create a combined PR - matched ${branchesAndPRStrings.length} branches/PRs but need ${minCombineNumber} branches/PRs`
+    )
+    return 'not enough PRs/branches matched criteria to create a combined PR'
+  }
+
+  // Create a new branch
+  try {
+    await octokit.rest.git.createRef({
+      owner: github.context.repo.owner,
+      repo: github.context.repo.repo,
+      ref: 'refs/heads/' + combineBranchName,
+      sha: baseBranchSHA
+    })
+  } catch (error) {
+    // If the branch already exists, we'll try to merge into it
+    if (error.status == 422) {
+      core.warning('Branch already exists - will try to merge into it')
+    } else {
+      // Otherwise, fail the Action
+      core.error(error)
+      core.setFailed('Failed to create combined branch')
+      return 'Failed to create combined branch'
+    }
+  }
+
+  // Merge all branches into the new branch
+  let combinedPRs = []
+  let mergeFailedPRs = []
+  for (const {branch, prString} of branchesAndPRStrings) {
+    try {
+      await octokit.rest.repos.merge({
+        owner: github.context.repo.owner,
+        repo: github.context.repo.repo,
+        base: combineBranchName,
+        head: branch
+      })
+      core.info('Merged branch ' + branch)
+      combinedPRs.push(prString)
+    } catch (error) {
+      core.warning('Failed to merge branch ' + branch)
+      mergeFailedPRs.push(prString)
+    }
+  }
+
+  // Create a new PR with the combined branch
+  core.info('Creating combined PR')
+  const combinedPRsString = `- ${combinedPRs.join('\n- ')}`
+  let body = `${prBodyHeader}\n\n✅ The following pull requests have been successfully combined on this PR:\n${combinedPRsString}`
+  if (mergeFailedPRs.length > 0) {
+    const mergeFailedPRsString = `- ${mergeFailedPRs.join('\n- ')}`
+    body +=
+      '\n\n⚠️ The following PRs were left out due to merge conflicts:\n' +
+      mergeFailedPRsString
+  }
+
+  body += `\n\n> This PR was created by the [\`${repoName}\`](${repoUrl}) action`
+
+  core.debug('PR body: ' + body)
+
+  var pullRequest
+  try {
+    pullRequest = await octokit.rest.pulls.create({
+      owner: github.context.repo.owner,
+      repo: github.context.repo.repo,
+      title: prTitle,
+      head: combineBranchName,
+      base: baseBranch,
+      body: body
+    })
+  } catch (error) {
+    if (error?.status === 422) {
+      core.warning('Combined PR already exists')
+      // update the PR body
+      const prs = await octokit.rest.pulls.list({
+        owner: github.context.repo.owner,
+        repo: github.context.repo.repo,
+        head: github.context.repo.owner + ':' + combineBranchName,
+        base: baseBranch,
+        state: 'open'
+      })
+      const pr = prs.data[0]
+      core.info('Updating PR body')
+      await octokit.rest.pulls.update({
+        owner: github.context.repo.owner,
+        repo: github.context.repo.repo,
+        pull_number: pr.number,
+        body: body
+      })
+      pullRequest = {data: pr}
+    } else {
+      if (
+        error?.message?.includes(
+          'GitHub Actions is not permitted to create or approve pull requests'
+        )
+      ) {
+        core.warning(
+          'https://github.blog/changelog/2022-05-03-github-actions-prevent-github-actions-from-creating-and-approving-pull-requests/'
+        )
+      }
+
+      core.setFailed(`Failed to create combined PR - ${error}`)
+      return 'failure'
+    }
+  }
+
+  // check the combined PR's state to see if it is closed
+  const combinedPRState = pullRequest.data.state
+  if (combinedPRState === 'closed') {
+    core.info('Combined PR is closed - attempting to reopen')
+    await octokit.rest.pulls.update({
+      owner: github.context.repo.owner,
+      repo: github.context.repo.repo,
+      pull_number: pullRequest.data.number,
+      state: 'open'
+    })
+  }
+
+  if (labels !== '') {
+    // split and trim labels
+    const labelsArray = labels.split(',').map(label => label.trim())
+
+    // add labels to the combined PR if specified
+    if (labelsArray.length > 0) {
+      core.info(`Adding labels to combined PR: ${labelsArray}`)
+      await octokit.rest.issues.addLabels({
+        owner: github.context.repo.owner,
+        repo: github.context.repo.repo,
+        issue_number: pullRequest.data.number,
+        labels: labelsArray
+      })
+    }
+  }
+
+  // output pull request url
+  core.info('Combined PR url: ' + pullRequest.data.html_url)
+  core.setOutput('pr_url', pullRequest.data.html_url)
+
+  // output pull request number
+  core.info('Combined PR number: ' + pullRequest.data.number)
+  core.setOutput('pr_number', pullRequest.data.number)
+
+  return 'success'
+}
+
+// Do not run if this is a test
+if (process.env.COMBINE_PRS_TEST !== 'true') {
+  /* istanbul ignore next */
+  run()
 }
 
 })();

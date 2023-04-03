@@ -24,6 +24,7 @@ This Action is customizable so you can use it for your own purposes and it doesn
 | `review_required` | Whether or not reviews should be passing to combine the PR - can be `"true"` or `"false"` | `"false"` | `false` |
 | `ignore_label` | The label to ignore when combining PRs | `"nocombine"` | `true` |
 | `select_label` | The label which marks PRs that should be combined. Leave empty to consider all PRs. | `""` | `false` |
+| `labels` | A comma seperated list of labels to add to the combined PR - Example: `dependencies,combined-pr,etc` | `""` | `false` |
 
 ## Outputs 📤
 
