@@ -220,7 +220,7 @@ export async function run() {
 
     // add labels to the combined PR if specified
     if (labelsArray.length > 0) {
-      core.info('Adding labels to combined PR')
+      core.info(`Adding labels to combined PR: ${labelsArray}`)
       await octokit.rest.issues.addLabels({
         owner: context.repo.owner,
         repo: context.repo.repo,
