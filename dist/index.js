@@ -10160,18 +10160,20 @@ async function run() {
     })
   }
 
-  // split and trim labels
-  const labelsArray = labels.split(',').map(label => label.trim())
+  if (labels !== '') {
+    // split and trim labels
+    const labelsArray = labels.split(',').map(label => label.trim())
 
-  // add labels to the combined PR if specified
-  if (labelsArray.length > 0) {
-    core.info('Adding labels to combined PR')
-    await octokit.rest.issues.addLabels({
-      owner: github.context.repo.owner,
-      repo: github.context.repo.repo,
-      issue_number: pullRequest.data.number,
-      labels: labelsArray
-    })
+    // add labels to the combined PR if specified
+    if (labelsArray.length > 0) {
+      core.info('Adding labels to combined PR')
+      await octokit.rest.issues.addLabels({
+        owner: github.context.repo.owner,
+        repo: github.context.repo.repo,
+        issue_number: pullRequest.data.number,
+        labels: labelsArray
+      })
+    }
   }
 
   // output pull request url
