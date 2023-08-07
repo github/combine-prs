@@ -7,6 +7,9 @@ on:
   pull_request:
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   package-check:
     runs-on: ubuntu-latest
@@ -14,26 +17,19 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      # check the node version from the .node-version file
-      - name: fetch node version
-        id: node-version
-        run: |
-          version=$(cat .node-version)
-          echo "version=${version}" >> $GITHUB_OUTPUT
-
       - name: setup node
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@64ed1c7eab4cce3362f8c340dee64e5eaeef8f7c # pin@v3.6.0
         with:
-          node-version: ${{ steps.node-version.outputs.version }}
-          cache: npm
+          node-version-file: .node-version
+          cache: 'npm'
 
-      - name: Install dependencies
+      - name: install dependencies
         run: npm ci
 
-      - name: Rebuild the dist/ directory
+      - name: rebuild the dist/ directory
         run: npm run bundle
 
-      - name: Compare the expected and actual dist/ directories
+      - name: compare the expected and actual dist/ directories
         run: |
           if [ "$(git diff --ignore-space-at-eol dist/ | wc -l)" -gt "0" ]; then
             echo "Detected uncommitted changes after build.  See status below:"
@@ -43,7 +39,7 @@ jobs:
         id: diff
 
       # If index.js was different than expected, upload the expected version as an artifact
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # pin@v3.1.2
         if: ${{ failure() && steps.diff.conclusion == 'failure' }}
         with:
           name: dist
