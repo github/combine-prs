@@ -10,6 +10,13 @@ GitHub uses this Action to combine multiple dependabot PRs into a single one. Ra
 
 This Action is customizable so you can use it for your own purposes and it doesn't have to be specific to dependabot PRs.
 
+## Notice 📢
+
+> [!NOTE]
+> A notice around the [Dependabot Grouped Version Updates feature](https://github.blog/changelog/2023-06-30-grouped-version-updates-for-dependabot-public-beta/)
+
+As mentioned above is this README, a core reason why this Action exists is to "combine multiple Dependabot PRs into one". Work for this Action was completed before the [GitHub Blog Post](https://github.blog/changelog/2023-06-30-grouped-version-updates-for-dependabot-public-beta/) was published and the Dependabot Grouped Version Updates feature was released. While it may seem like this Action is no longer needed due to this feature, there are actually still quite a few use cases for this Action. The first one that is front of mind is that the PRs which Dependabot opens are grouped by package manager. This means that if you have a project that uses multiple package managers, you'll still end up with multiple PRs. This Action can be used to combine those PRs into a single one. You may also want to combine pull requests that are not related to Dependabot in anyway, which this Action can also do.
+
 ## Inputs 📝
 
 | Name | Description | Default | Required |
