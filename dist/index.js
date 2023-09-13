@@ -10102,7 +10102,7 @@ async function run() {
       combinedPRs.push(prString)
     } catch (error) {
       core.warning('Failed to merge branch ' + branch)
-      mergeFailedPRs.push(prString)
+      mergeFailedPRs.push(prString.replace('Closes ', ''))
     }
   }
 

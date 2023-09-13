@@ -158,7 +158,7 @@ test('successfully runs the action', async () => {
   expect(infoMock).toHaveBeenCalledWith('Merged branch dependabot-5')
   expect(infoMock).toHaveBeenCalledWith('Creating combined PR')
   expect(debugMock).toHaveBeenCalledWith(
-    'PR body: # Combined PRs ➡️📦⬅️\n\n✅ The following pull requests have been successfully combined on this PR:\n- #1 Update dependency 1\n- #5 Update dependency 5\n\n⚠️ The following PRs were left out due to merge conflicts:\n- #2 Update dependency 2\n\n> This PR was created by the [`github/combine-prs`](https://github.com/github/combine-prs) action'
+    'PR body: # Combined PRs ➡️📦⬅️\n\n✅ The following pull requests have been successfully combined on this PR:\n- Closes #1 Update dependency 1\n- Closes #5 Update dependency 5\n\n⚠️ The following PRs were left out due to merge conflicts:\n- #2 Update dependency 2\n\n> This PR was created by the [`github/combine-prs`](https://github.com/github/combine-prs) action'
   )
   expect(infoMock).toHaveBeenCalledWith(
     'Combined PR url: https://github.com/test-owner/test-repo/pull/100'
@@ -225,7 +225,7 @@ test('successfully runs the action with the branch_regex option', async () => {
   expect(infoMock).toHaveBeenCalledWith('Merged branch dependabot-5')
   expect(infoMock).toHaveBeenCalledWith('Creating combined PR')
   expect(debugMock).toHaveBeenCalledWith(
-    'PR body: # Combined PRs ➡️📦⬅️\n\n✅ The following pull requests have been successfully combined on this PR:\n- #1 Update dependency 1\n- #5 Update dependency 5\n\n⚠️ The following PRs were left out due to merge conflicts:\n- #2 Update dependency 2\n\n> This PR was created by the [`github/combine-prs`](https://github.com/github/combine-prs) action'
+    'PR body: # Combined PRs ➡️📦⬅️\n\n✅ The following pull requests have been successfully combined on this PR:\n- Closes #1 Update dependency 1\n- Closes #5 Update dependency 5\n\n⚠️ The following PRs were left out due to merge conflicts:\n- #2 Update dependency 2\n\n> This PR was created by the [`github/combine-prs`](https://github.com/github/combine-prs) action'
   )
   expect(infoMock).toHaveBeenCalledWith(
     'Combined PR url: https://github.com/test-owner/test-repo/pull/100'
@@ -780,7 +780,7 @@ test('successfully runs the action and sets labels', async () => {
   expect(infoMock).toHaveBeenCalledWith('Merged branch dependabot-5')
   expect(infoMock).toHaveBeenCalledWith('Creating combined PR')
   expect(debugMock).toHaveBeenCalledWith(
-    'PR body: # Combined PRs ➡️📦⬅️\n\n✅ The following pull requests have been successfully combined on this PR:\n- #1 Update dependency 1\n- #5 Update dependency 5\n\n⚠️ The following PRs were left out due to merge conflicts:\n- #2 Update dependency 2\n\n> This PR was created by the [`github/combine-prs`](https://github.com/github/combine-prs) action'
+    'PR body: # Combined PRs ➡️📦⬅️\n\n✅ The following pull requests have been successfully combined on this PR:\n- Closes #1 Update dependency 1\n- Closes #5 Update dependency 5\n\n⚠️ The following PRs were left out due to merge conflicts:\n- #2 Update dependency 2\n\n> This PR was created by the [`github/combine-prs`](https://github.com/github/combine-prs) action'
   )
 
   expect(infoMock).toHaveBeenCalledWith(
