@@ -10046,7 +10046,7 @@ async function run() {
 
     if (statusOK) {
       core.info('Adding branch to array: ' + branch)
-      const prString = '#' + pull['number'] + ' ' + pull['title']
+      const prString = 'Closes #' + pull['number'] + ' ' + pull['title']
       branchesAndPRStrings.push({branch, prString})
       baseBranch = pull['base']['ref']
       baseBranchSHA = pull['base']['sha']
