@@ -10047,9 +10047,7 @@ async function run() {
 
     if (statusOK) {
       core.info('Adding branch to array: ' + branch)
-      if (autoclose) {
-        const prString = 'Closes #' + pull['number'] + ' ' + pull['title']
-      }
+      const prString = `${autoclose ? 'Closes ' : ''}#${pull['number']} ${pull['title']}`;
       branchesAndPRStrings.push({branch, prString})
       baseBranch = pull['base']['ref']
       baseBranchSHA = pull['base']['sha']
