@@ -53,6 +53,10 @@ inputs:
     description: A comma seperated list of labels to add to the combined PR
     required: false
     default: ""
+  autoclose:
+    description: Whether or not to close combined PRs if the combined PR is merged
+    required: false
+    default: "true"
 outputs:
   pr_url:
     description: The pull request URL if a PR was created

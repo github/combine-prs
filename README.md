@@ -32,6 +32,7 @@ As mentioned above is this README, a core reason why this Action exists is to "c
 | `ignore_label` | The label to ignore when combining PRs | `"nocombine"` | `true` |
 | `select_label` | The label which marks PRs that should be combined. Leave empty to consider all PRs. | `""` | `false` |
 | `labels` | A comma separated list of labels to add to the combined PR - Example: `dependencies,combined-pr,etc` | `""` | `false` |
+| `autoclose` | Whether or not to close combined PRs if the combined PR is merged - can be `"true"` or `"false"` | `"true"` | `false` |
 
 ## Outputs 📤
 
