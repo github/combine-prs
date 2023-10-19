@@ -45,7 +45,7 @@ export async function checkStatus(
           statusOK = false
         }
       } else {
-        core.info('No status check associated with the commit')
+        core.info('No status check associated with branch: ' + branch)
         statusOK = false
       }
     }
