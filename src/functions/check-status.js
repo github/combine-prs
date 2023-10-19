@@ -37,10 +37,15 @@ export async function checkStatus(
     // Check for CI status
     if (mustBeGreen) {
       const [{commit}] = result.repository.pullRequest.commits.nodes
-      const state = commit.statusCheckRollup.state
-      core.info('Validating status: ' + state)
-      if (state !== 'SUCCESS') {
-        core.info('Discarding ' + branch + ' with status ' + state)
+      if (commit.statusCheckRollup) {
+        const state = commit.statusCheckRollup.state
+        core.info('Validating status: ' + state)
+        if (state !== 'SUCCESS') {
+          core.info('Discarding ' + branch + ' with status ' + state)
+          statusOK = false
+        }
+      } else {
+        core.info('No status check associated with the commit')
         statusOK = false
       }
     }
