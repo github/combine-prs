@@ -43,6 +43,7 @@ beforeEach(() => {
   process.env.GITHUB_REPOSITORY = 'test-owner/test-repo'
   process.env.INPUT_MIN_COMBINE_NUMBER = '2'
   process.env.INPUT_LABELS = ''
+  process.env.INPUT_AUTOCLOSE = 'true'
 
   jest.spyOn(github, 'getOctokit').mockImplementation(() => {
     return {
@@ -54,7 +55,8 @@ beforeEach(() => {
           buildPR(4, 'dependabot-4'),
           buildPR(5, 'dependabot-5'),
           buildPR(6, 'dependabot-6'),
-          buildPR(7, 'fix-package')
+          buildPR(7, 'dependabot-7'),
+          buildPR(8, 'fix-package')
         ]
       }),
       graphql: jest.fn().mockImplementation((_query, params) => {
@@ -69,6 +71,8 @@ beforeEach(() => {
             return buildStatusResponse(null, 'SUCCESS')
           case 6:
             return buildStatusResponse('REVIEW_REQUIRED', 'SUCCESS')
+          case 7:
+            return buildStatusResponse(null, null)
           default:
             throw new Error(
               `params.pull_number of ${params.pull_number} is not configured.`
@@ -159,6 +163,71 @@ test('successfully runs the action', async () => {
   expect(infoMock).toHaveBeenCalledWith('Creating combined PR')
   expect(debugMock).toHaveBeenCalledWith(
     'PR body: # Combined PRs ➡️📦⬅️\n\n✅ The following pull requests have been successfully combined on this PR:\n- Closes #1 Update dependency 1\n- Closes #5 Update dependency 5\n\n⚠️ The following PRs were left out due to merge conflicts:\n- #2 Update dependency 2\n\n> This PR was created by the [`github/combine-prs`](https://github.com/github/combine-prs) action'
+  )
+  expect(infoMock).toHaveBeenCalledWith(
+    'Combined PR url: https://github.com/test-owner/test-repo/pull/100'
+  )
+  expect(infoMock).toHaveBeenCalledWith('Combined PR number: 100')
+  expect(setOutputMock).toHaveBeenCalledWith('pr_number', 100)
+  expect(setOutputMock).toHaveBeenCalledWith(
+    'pr_url',
+    'https://github.com/test-owner/test-repo/pull/100'
+  )
+})
+
+test('successfully runs the action when autoclose is disabled', async () => {
+  process.env.INPUT_REVIEW_REQUIRED = 'true'
+  process.env.INPUT_AUTOCLOSE = 'false'
+  expect(await run()).toBe('success')
+  expect(infoMock).toHaveBeenCalledWith('Pull for branch: dependabot-1')
+  expect(infoMock).toHaveBeenCalledWith('Branch matched prefix: dependabot-1')
+  expect(infoMock).toHaveBeenCalledWith('Checking green status: dependabot-1')
+  expect(infoMock).toHaveBeenCalledWith('Validating status: SUCCESS')
+  expect(infoMock).toHaveBeenCalledWith('Validating review decision: APPROVED')
+  expect(infoMock).toHaveBeenCalledWith('Branch dependabot-1 is approved')
+  expect(infoMock).toHaveBeenCalledWith('Pull for branch: dependabot-2')
+  expect(infoMock).toHaveBeenCalledWith('Branch matched prefix: dependabot-2')
+  expect(infoMock).toHaveBeenCalledWith('Checking green status: dependabot-2')
+  expect(infoMock).toHaveBeenCalledWith('Validating status: SUCCESS')
+  expect(infoMock).toHaveBeenCalledWith('Validating review decision: APPROVED')
+  expect(infoMock).toHaveBeenCalledWith('Branch dependabot-2 is approved')
+  expect(infoMock).toHaveBeenCalledWith('Pull for branch: dependabot-3')
+  expect(infoMock).toHaveBeenCalledWith('Branch matched prefix: dependabot-3')
+  expect(infoMock).toHaveBeenCalledWith('Pull for branch: dependabot-4')
+  expect(infoMock).toHaveBeenCalledWith('Branch matched prefix: dependabot-4')
+  expect(infoMock).toHaveBeenCalledWith('Checking green status: dependabot-4')
+  expect(infoMock).toHaveBeenCalledWith('Validating status: FAILURE')
+  expect(infoMock).toHaveBeenCalledWith(
+    'Discarding dependabot-4 with status FAILURE'
+  )
+  expect(infoMock).toHaveBeenCalledWith('Branch matched prefix: dependabot-5')
+  expect(infoMock).toHaveBeenCalledWith('Checking green status: dependabot-5')
+  expect(infoMock).toHaveBeenCalledWith('Validating status: SUCCESS')
+  expect(infoMock).toHaveBeenCalledWith('Validating review decision: null')
+  expect(infoMock).toHaveBeenCalledWith(
+    'Branch dependabot-5 has no required reviewers - OK'
+  )
+  expect(infoMock).toHaveBeenCalledWith('Checking labels: dependabot-1')
+  expect(infoMock).toHaveBeenCalledWith('Checking ignore_label for: question')
+  expect(infoMock).toHaveBeenCalledWith('Adding branch to array: dependabot-1')
+  expect(infoMock).toHaveBeenCalledWith('Checking labels: dependabot-2')
+  expect(infoMock).toHaveBeenCalledWith('Adding branch to array: dependabot-2')
+  expect(infoMock).toHaveBeenCalledWith('Checking labels: dependabot-3')
+  expect(infoMock).toHaveBeenCalledWith('Checking ignore_label for: nocombine')
+  expect(infoMock).toHaveBeenCalledWith(
+    'Discarding dependabot-3 with label nocombine because it matches ignore_label'
+  )
+  expect(infoMock).toHaveBeenCalledWith('Checking labels: dependabot-4')
+  expect(infoMock).toHaveBeenCalledWith('Checking labels: dependabot-5')
+  expect(infoMock).toHaveBeenCalledWith('Checking labels: dependabot-6')
+  expect(infoMock).toHaveBeenCalledWith('Merged branch dependabot-1')
+  expect(warningMock).toHaveBeenCalledWith(
+    'Failed to merge branch dependabot-2'
+  )
+  expect(infoMock).toHaveBeenCalledWith('Merged branch dependabot-5')
+  expect(infoMock).toHaveBeenCalledWith('Creating combined PR')
+  expect(debugMock).toHaveBeenCalledWith(
+    'PR body: # Combined PRs ➡️📦⬅️\n\n✅ The following pull requests have been successfully combined on this PR:\n- #1 Update dependency 1\n- #5 Update dependency 5\n\n⚠️ The following PRs were left out due to merge conflicts:\n- #2 Update dependency 2\n\n> This PR was created by the [`github/combine-prs`](https://github.com/github/combine-prs) action'
   )
   expect(infoMock).toHaveBeenCalledWith(
     'Combined PR url: https://github.com/test-owner/test-repo/pull/100'
@@ -781,6 +850,162 @@ test('successfully runs the action and sets labels', async () => {
   expect(infoMock).toHaveBeenCalledWith('Creating combined PR')
   expect(debugMock).toHaveBeenCalledWith(
     'PR body: # Combined PRs ➡️📦⬅️\n\n✅ The following pull requests have been successfully combined on this PR:\n- Closes #1 Update dependency 1\n- Closes #5 Update dependency 5\n\n⚠️ The following PRs were left out due to merge conflicts:\n- #2 Update dependency 2\n\n> This PR was created by the [`github/combine-prs`](https://github.com/github/combine-prs) action'
+  )
+
+  expect(infoMock).toHaveBeenCalledWith(
+    `Adding labels to combined PR: label1,label2,label3`
+  )
+
+  expect(infoMock).toHaveBeenCalledWith(
+    'Combined PR url: https://github.com/test-owner/test-repo/pull/100'
+  )
+  expect(infoMock).toHaveBeenCalledWith('Combined PR number: 100')
+  expect(setOutputMock).toHaveBeenCalledWith('pr_number', 100)
+  expect(setOutputMock).toHaveBeenCalledWith(
+    'pr_url',
+    'https://github.com/test-owner/test-repo/pull/100'
+  )
+})
+
+test('successfully runs the action and sets labels when one PR has no CI defined', async () => {
+  jest.spyOn(github, 'getOctokit').mockImplementation(() => {
+    return {
+      paginate: jest.fn().mockImplementation(() => {
+        return [
+          buildPR(1, 'dependabot-1', ['question']),
+          buildPR(2, 'dependabot-2'),
+          buildPR(3, 'dependabot-3', ['nocombine']),
+          buildPR(4, 'dependabot-4'),
+          buildPR(5, 'dependabot-5'),
+          buildPR(6, 'dependabot-6'),
+          buildPR(7, 'fix-package')
+        ]
+      }),
+      graphql: jest.fn().mockImplementation((_query, params) => {
+        switch (params.pull_number) {
+          case 1:
+          case 2:
+          case 3:
+            return buildStatusResponse('APPROVED', 'SUCCESS')
+          case 4:
+            return buildStatusResponse('APPROVED', 'FAILURE')
+          case 5:
+            return buildStatusResponse(null, 'SUCCESS')
+          case 6:
+            return {
+              repository: {
+                pullRequest: {
+                  reviewDecision: null,
+                  commits: {
+                    nodes: [
+                      {
+                        commit: {
+                          statusCheckRollup: null
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          default:
+            throw new Error(
+              `params.pull_number of ${params.pull_number} is not configured.`
+            )
+        }
+      }),
+      rest: {
+        issues: {
+          addLabels: jest.fn().mockReturnValueOnce({
+            data: {}
+          })
+        },
+        git: {
+          createRef: jest.fn().mockReturnValueOnce({
+            data: {}
+          })
+        },
+        repos: {
+          // mock the first value of merge to be a success and the second to be an exception
+          merge: jest
+            .fn()
+            .mockReturnValueOnce({
+              data: {
+                merged: true
+              }
+            })
+            .mockImplementationOnce(() => {
+              throw new Error('merge error')
+            })
+        },
+        pulls: {
+          create: jest.fn().mockReturnValueOnce({
+            data: {
+              number: 100,
+              html_url: 'https://github.com/test-owner/test-repo/pull/100'
+            }
+          })
+        }
+      }
+    }
+  })
+
+  process.env.INPUT_REVIEW_REQUIRED = 'true'
+  process.env.INPUT_LABELS = 'label1,label2, label3'
+  expect(await run()).toBe('success')
+  expect(infoMock).toHaveBeenCalledWith('Pull for branch: dependabot-1')
+  expect(infoMock).toHaveBeenCalledWith('Branch matched prefix: dependabot-1')
+  expect(infoMock).toHaveBeenCalledWith('Checking green status: dependabot-1')
+  expect(infoMock).toHaveBeenCalledWith('Validating status: SUCCESS')
+  expect(infoMock).toHaveBeenCalledWith('Validating review decision: APPROVED')
+  expect(infoMock).toHaveBeenCalledWith('Branch dependabot-1 is approved')
+  expect(infoMock).toHaveBeenCalledWith('Pull for branch: dependabot-2')
+  expect(infoMock).toHaveBeenCalledWith('Branch matched prefix: dependabot-2')
+  expect(infoMock).toHaveBeenCalledWith('Checking green status: dependabot-2')
+  expect(infoMock).toHaveBeenCalledWith('Validating status: SUCCESS')
+  expect(infoMock).toHaveBeenCalledWith('Validating review decision: APPROVED')
+  expect(infoMock).toHaveBeenCalledWith('Branch dependabot-2 is approved')
+  expect(infoMock).toHaveBeenCalledWith('Pull for branch: dependabot-3')
+  expect(infoMock).toHaveBeenCalledWith('Branch matched prefix: dependabot-3')
+  expect(infoMock).toHaveBeenCalledWith('Pull for branch: dependabot-4')
+  expect(infoMock).toHaveBeenCalledWith('Branch matched prefix: dependabot-4')
+  expect(infoMock).toHaveBeenCalledWith('Checking green status: dependabot-4')
+  expect(infoMock).toHaveBeenCalledWith('Validating status: FAILURE')
+  expect(infoMock).toHaveBeenCalledWith(
+    'Discarding dependabot-4 with status FAILURE'
+  )
+  expect(infoMock).toHaveBeenCalledWith('Branch matched prefix: dependabot-5')
+  expect(infoMock).toHaveBeenCalledWith('Checking green status: dependabot-5')
+  expect(infoMock).toHaveBeenCalledWith('Validating status: SUCCESS')
+  expect(infoMock).toHaveBeenCalledWith('Validating review decision: null')
+  expect(infoMock).toHaveBeenCalledWith(
+    'Branch dependabot-5 has no required reviewers - OK'
+  )
+  expect(infoMock).toHaveBeenCalledWith('Checking labels: dependabot-1')
+  expect(infoMock).toHaveBeenCalledWith('Checking ignore_label for: question')
+  expect(infoMock).toHaveBeenCalledWith('Adding branch to array: dependabot-1')
+  expect(infoMock).toHaveBeenCalledWith('Checking labels: dependabot-2')
+  expect(infoMock).toHaveBeenCalledWith('Adding branch to array: dependabot-2')
+  expect(infoMock).toHaveBeenCalledWith('Checking labels: dependabot-3')
+  expect(infoMock).toHaveBeenCalledWith('Checking ignore_label for: nocombine')
+  expect(infoMock).toHaveBeenCalledWith(
+    'Discarding dependabot-3 with label nocombine because it matches ignore_label'
+  )
+  expect(infoMock).toHaveBeenCalledWith('Checking labels: dependabot-4')
+  expect(infoMock).toHaveBeenCalledWith('Checking labels: dependabot-5')
+  expect(infoMock).toHaveBeenCalledWith('Checking labels: dependabot-6')
+  expect(infoMock).toHaveBeenCalledWith(
+    'No status check(s) associated with branch: dependabot-6'
+  )
+
+  expect(infoMock).toHaveBeenCalledWith('Merged branch dependabot-1')
+  expect(warningMock).toHaveBeenCalledWith(
+    'Failed to merge branch dependabot-2'
+  )
+  expect(infoMock).toHaveBeenCalledWith('Merged branch dependabot-5')
+  expect(infoMock).toHaveBeenCalledWith('Creating combined PR')
+  expect(debugMock).toHaveBeenCalledWith(
+    'PR body: # Combined PRs ➡️📦⬅️\n\n✅ The following pull requests have been successfully combined on this PR:\n- Closes #1 Update dependency 1\n- Closes #5 Update dependency 5\n- Closes #6 Update dependency 6\n\n⚠️ The following PRs were left out due to merge conflicts:\n- #2 Update dependency 2\n\n> This PR was created by the [`github/combine-prs`](https://github.com/github/combine-prs) action'
   )
 
   expect(infoMock).toHaveBeenCalledWith(
