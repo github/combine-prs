@@ -172,6 +172,72 @@ test('successfully runs the action', async () => {
   )
 })
 
+
+test('successfully runs the action when autoclose is disabled', async () => {
+  process.env.INPUT_REVIEW_REQUIRED = 'true'
+  process.env.INPUT_AUTOCLOSE = 'false'
+  expect(await run()).toBe('success')
+  expect(infoMock).toHaveBeenCalledWith('Pull for branch: dependabot-1')
+  expect(infoMock).toHaveBeenCalledWith('Branch matched prefix: dependabot-1')
+  expect(infoMock).toHaveBeenCalledWith('Checking green status: dependabot-1')
+  expect(infoMock).toHaveBeenCalledWith('Validating status: SUCCESS')
+  expect(infoMock).toHaveBeenCalledWith('Validating review decision: APPROVED')
+  expect(infoMock).toHaveBeenCalledWith('Branch dependabot-1 is approved')
+  expect(infoMock).toHaveBeenCalledWith('Pull for branch: dependabot-2')
+  expect(infoMock).toHaveBeenCalledWith('Branch matched prefix: dependabot-2')
+  expect(infoMock).toHaveBeenCalledWith('Checking green status: dependabot-2')
+  expect(infoMock).toHaveBeenCalledWith('Validating status: SUCCESS')
+  expect(infoMock).toHaveBeenCalledWith('Validating review decision: APPROVED')
+  expect(infoMock).toHaveBeenCalledWith('Branch dependabot-2 is approved')
+  expect(infoMock).toHaveBeenCalledWith('Pull for branch: dependabot-3')
+  expect(infoMock).toHaveBeenCalledWith('Branch matched prefix: dependabot-3')
+  expect(infoMock).toHaveBeenCalledWith('Pull for branch: dependabot-4')
+  expect(infoMock).toHaveBeenCalledWith('Branch matched prefix: dependabot-4')
+  expect(infoMock).toHaveBeenCalledWith('Checking green status: dependabot-4')
+  expect(infoMock).toHaveBeenCalledWith('Validating status: FAILURE')
+  expect(infoMock).toHaveBeenCalledWith(
+    'Discarding dependabot-4 with status FAILURE'
+  )
+  expect(infoMock).toHaveBeenCalledWith('Branch matched prefix: dependabot-5')
+  expect(infoMock).toHaveBeenCalledWith('Checking green status: dependabot-5')
+  expect(infoMock).toHaveBeenCalledWith('Validating status: SUCCESS')
+  expect(infoMock).toHaveBeenCalledWith('Validating review decision: null')
+  expect(infoMock).toHaveBeenCalledWith(
+    'Branch dependabot-5 has no required reviewers - OK'
+  )
+  expect(infoMock).toHaveBeenCalledWith('Checking labels: dependabot-1')
+  expect(infoMock).toHaveBeenCalledWith('Checking ignore_label for: question')
+  expect(infoMock).toHaveBeenCalledWith('Adding branch to array: dependabot-1')
+  expect(infoMock).toHaveBeenCalledWith('Checking labels: dependabot-2')
+  expect(infoMock).toHaveBeenCalledWith('Adding branch to array: dependabot-2')
+  expect(infoMock).toHaveBeenCalledWith('Checking labels: dependabot-3')
+  expect(infoMock).toHaveBeenCalledWith('Checking ignore_label for: nocombine')
+  expect(infoMock).toHaveBeenCalledWith(
+    'Discarding dependabot-3 with label nocombine because it matches ignore_label'
+  )
+  expect(infoMock).toHaveBeenCalledWith('Checking labels: dependabot-4')
+  expect(infoMock).toHaveBeenCalledWith('Checking labels: dependabot-5')
+  expect(infoMock).toHaveBeenCalledWith('Checking labels: dependabot-6')
+  expect(infoMock).toHaveBeenCalledWith('Merged branch dependabot-1')
+  expect(warningMock).toHaveBeenCalledWith(
+    'Failed to merge branch dependabot-2'
+  )
+  expect(infoMock).toHaveBeenCalledWith('Merged branch dependabot-5')
+  expect(infoMock).toHaveBeenCalledWith('Creating combined PR')
+  expect(debugMock).toHaveBeenCalledWith(
+    'PR body: # Combined PRs ➡️📦⬅️\n\n✅ The following pull requests have been successfully combined on this PR:\n- #1 Update dependency 1\n- #5 Update dependency 5\n\n⚠️ The following PRs were left out due to merge conflicts:\n- #2 Update dependency 2\n\n> This PR was created by the [`github/combine-prs`](https://github.com/github/combine-prs) action'
+  )
+  expect(infoMock).toHaveBeenCalledWith(
+    'Combined PR url: https://github.com/test-owner/test-repo/pull/100'
+  )
+  expect(infoMock).toHaveBeenCalledWith('Combined PR number: 100')
+  expect(setOutputMock).toHaveBeenCalledWith('pr_number', 100)
+  expect(setOutputMock).toHaveBeenCalledWith(
+    'pr_url',
+    'https://github.com/test-owner/test-repo/pull/100'
+  )
+})
+
 test('successfully runs the action with the branch_regex option', async () => {
   process.env.INPUT_REVIEW_REQUIRED = 'true'
   process.env.INPUT_BRANCH_REGEX = '.*penda.*' // match dependabot branches
