@@ -9949,9 +9949,6 @@ async function checkStatus(
         // If no CI checks have been defined for the given pull request / commit
       } else {
         core.info('No status check(s) associated with branch: ' + branch)
-        core.debug(
-          'If no checks have been defined, then we default to success for CI checks'
-        )
       }
     }
 
