@@ -23,6 +23,7 @@ export async function run() {
   const minCombineNumber = parseInt(
     core.getInput('min_combine_number', {required: true})
   )
+  const autoclose = core.getInput('autoclose') === 'true'
 
   // check for either prefix or regex
   if (branchPrefix === '' && branchRegex === '') {
@@ -81,7 +82,7 @@ export async function run() {
 
     if (statusOK) {
       core.info('Adding branch to array: ' + branch)
-      const prString = 'Closes #' + pull['number'] + ' ' + pull['title']
+      const prString = `${autoclose ? 'Closes ' : ''}#${pull['number']} ${pull['title']}`;
       branchesAndPRStrings.push({branch, prString})
       baseBranch = pull['base']['ref']
       baseBranchSHA = pull['base']['sha']
