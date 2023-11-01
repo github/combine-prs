@@ -43,6 +43,7 @@ beforeEach(() => {
   process.env.GITHUB_REPOSITORY = 'test-owner/test-repo'
   process.env.INPUT_MIN_COMBINE_NUMBER = '2'
   process.env.INPUT_LABELS = ''
+  process.env.INPUT_AUTOCLOSE = 'true'
 
   jest.spyOn(github, 'getOctokit').mockImplementation(() => {
     return {
