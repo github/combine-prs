@@ -77,6 +77,8 @@ jobs:
       - name: combine-prs
         id: combine-prs
         uses: github/combine-prs@vX.X.X # where X.X.X is the latest version
+        with:
+          labels: combined-pr # Optional: add a label to the combined PR
 ```
 
 ## Permissions
