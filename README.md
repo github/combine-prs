@@ -77,6 +77,8 @@ jobs:
       - name: combine-prs
         id: combine-prs
         uses: github/combine-prs@vX.X.X # where X.X.X is the latest version
+        with:
+          labels: combined-pr # Optional: add a label to the combined PR
 ```
 
 ## Permissions
@@ -119,6 +121,6 @@ If you need CI to re-run on your newly created "combined" PR, you'll need to use
 
 ### GitHub App Setup
 
-Alternatively, you can use a GitHub App token. This is the recommended approach as it is more secure than a personal access token and a lot more scalable for large organizations.
+Alternatively, you can use a GitHub App token. This is the **recommended** approach as it is **more secure** than a personal access token and a lot more scalable for large organizations.
 
 Checkout the dedicated [documentation here](docs/github-app-setup.md) for more information on how to set this up.
