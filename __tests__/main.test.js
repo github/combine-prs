@@ -1115,7 +1115,9 @@ test('successfully runs the action and sets labels when one PR has no CI defined
   expect(warningMock).toHaveBeenCalledWith(
     'Failed to merge branch dependabot-2'
   )
-  expect(warningMock).toHaveBeenCalledWith('Failed to update combined pr branch with the base branch')
+  expect(warningMock).toHaveBeenCalledWith(
+    'Failed to update combined pr branch with the base branch'
+  )
   expect(setOutputMock).toHaveBeenCalledWith('pr_number', 100)
   expect(setOutputMock).toHaveBeenCalledWith(
     'pr_url',

@@ -30315,6 +30315,7 @@ async function run() {
     core.getInput('min_combine_number', {required: true})
   )
   const autoclose = core.getInput('autoclose') === 'true'
+  const updateBranch = core.getBooleanInput('update_branch')
 
   // check for either prefix or regex
   if (branchPrefix === '' && branchRegex === '') {
@@ -30521,6 +30522,22 @@ async function run() {
         issue_number: pullRequest.data.number,
         labels: labelsArray
       })
+    }
+  }
+
+  // lastly, if the pull request's branch can be updated cleanly, update it
+  if (updateBranch === true) {
+    core.info('Attempting to update branch')
+    try {
+      await octokit.rest.repos.merge({
+        owner: github.context.repo.owner,
+        repo: github.context.repo.repo,
+        base: baseBranch,
+        head: combineBranchName
+      })
+      core.info('Branch updated')
+    } catch (error) {
+      core.warning('Failed to update combined pr branch with the base branch')
     }
   }
 
