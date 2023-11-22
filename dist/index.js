@@ -30545,6 +30545,7 @@ async function run() {
       core.info('Branch updated')
     } catch (error) {
       core.warning('Failed to update combined pr branch with the base branch')
+      core.warning(error)
     }
   }
 
