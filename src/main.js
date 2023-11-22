@@ -238,12 +238,19 @@ export async function run() {
   if (updateBranch === true) {
     core.info('Attempting to update branch')
     try {
-      await octokit.rest.repos.merge({
+      const result = await octokit.rest.pulls.updateBranch({
         owner: context.repo.owner,
         repo: context.repo.repo,
-        base: baseBranch,
-        head: combineBranchName
+        pull_number: pullRequest.data.number
       })
+
+      // If the result is not a 202, return an error message and exit
+      if (result.status !== 202) {
+        throw new Error(
+          `Failed to update combined pr branch with the base branch - ${result}`
+        )
+      }
+
       core.info('Branch updated')
     } catch (error) {
       core.warning('Failed to update combined pr branch with the base branch')

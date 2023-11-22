@@ -1101,6 +1101,9 @@ test('successfully runs the action and sets labels when one PR has no CI defined
               number: 100,
               html_url: 'https://github.com/test-owner/test-repo/pull/100'
             }
+          }),
+          updateBranch: jest.fn().mockImplementation(() => {
+            throw new Error('updateBranch error')
           })
         }
       }
@@ -1117,6 +1120,211 @@ test('successfully runs the action and sets labels when one PR has no CI defined
   )
   expect(warningMock).toHaveBeenCalledWith(
     'Failed to update combined pr branch with the base branch'
+  )
+  expect(setOutputMock).toHaveBeenCalledWith('pr_number', 100)
+  expect(setOutputMock).toHaveBeenCalledWith(
+    'pr_url',
+    'https://github.com/test-owner/test-repo/pull/100'
+  )
+})
+
+test('successfully runs the action and sets labels when one PR has no CI defined and the update_branch logic fails due to a non 202 status code', async () => {
+  jest.spyOn(github, 'getOctokit').mockImplementation(() => {
+    return {
+      paginate: jest.fn().mockImplementation(() => {
+        return [
+          buildPR(1, 'dependabot-1', ['question']),
+          buildPR(2, 'dependabot-2'),
+          buildPR(3, 'dependabot-3', ['nocombine']),
+          buildPR(4, 'dependabot-4'),
+          buildPR(5, 'dependabot-5'),
+          buildPR(6, 'dependabot-6'),
+          buildPR(7, 'fix-package')
+        ]
+      }),
+      graphql: jest.fn().mockImplementation((_query, params) => {
+        switch (params.pull_number) {
+          case 1:
+          case 2:
+          case 3:
+            return buildStatusResponse('APPROVED', 'SUCCESS')
+          case 4:
+            return buildStatusResponse('APPROVED', 'FAILURE')
+          case 5:
+            return buildStatusResponse(null, 'SUCCESS')
+          case 6:
+            return {
+              repository: {
+                pullRequest: {
+                  reviewDecision: null,
+                  commits: {
+                    nodes: [
+                      {
+                        commit: {
+                          statusCheckRollup: null
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          default:
+            throw new Error(
+              `params.pull_number of ${params.pull_number} is not configured.`
+            )
+        }
+      }),
+      rest: {
+        issues: {
+          addLabels: jest.fn().mockReturnValueOnce({
+            data: {}
+          })
+        },
+        git: {
+          createRef: jest.fn().mockReturnValueOnce({
+            data: {}
+          })
+        },
+        repos: {
+          // mock the first value of merge to be a success and the second to be an exception
+          merge: jest
+            .fn()
+            .mockReturnValueOnce({
+              data: {
+                merged: true
+              }
+            })
+            .mockImplementation(() => {
+              throw new Error('merge error')
+            })
+        },
+        pulls: {
+          create: jest.fn().mockReturnValueOnce({
+            data: {
+              number: 100,
+              html_url: 'https://github.com/test-owner/test-repo/pull/100'
+            }
+          }),
+          updateBranch: jest.fn().mockReturnValueOnce({
+            status: 500
+          })
+        }
+      }
+    }
+  })
+
+  process.env.INPUT_REVIEW_REQUIRED = 'true'
+  process.env.INPUT_LABELS = 'label1,label2, label3'
+  expect(await run()).toBe('success')
+
+  expect(infoMock).toHaveBeenCalledWith('Merged branch dependabot-1')
+  expect(warningMock).toHaveBeenCalledWith(
+    'Failed to merge branch dependabot-2'
+  )
+  expect(warningMock).toHaveBeenCalledWith(
+    'Failed to update combined pr branch with the base branch'
+  )
+  expect(setOutputMock).toHaveBeenCalledWith('pr_number', 100)
+  expect(setOutputMock).toHaveBeenCalledWith(
+    'pr_url',
+    'https://github.com/test-owner/test-repo/pull/100'
+  )
+})
+
+test('successfully runs the action and updates the pull request branch', async () => {
+  jest.spyOn(github, 'getOctokit').mockImplementation(() => {
+    return {
+      paginate: jest.fn().mockImplementation(() => {
+        return [
+          buildPR(1, 'dependabot-1', ['question']),
+          buildPR(2, 'dependabot-2'),
+          buildPR(3, 'dependabot-3', ['nocombine']),
+          buildPR(4, 'dependabot-4'),
+          buildPR(5, 'dependabot-5'),
+          buildPR(6, 'dependabot-6'),
+          buildPR(7, 'fix-package')
+        ]
+      }),
+      graphql: jest.fn().mockImplementation((_query, params) => {
+        switch (params.pull_number) {
+          case 1:
+          case 2:
+          case 3:
+            return buildStatusResponse('APPROVED', 'SUCCESS')
+          case 4:
+            return buildStatusResponse('APPROVED', 'FAILURE')
+          case 5:
+            return buildStatusResponse(null, 'SUCCESS')
+          case 6:
+            return {
+              repository: {
+                pullRequest: {
+                  reviewDecision: null,
+                  commits: {
+                    nodes: [
+                      {
+                        commit: {
+                          statusCheckRollup: null
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          default:
+            throw new Error(
+              `params.pull_number of ${params.pull_number} is not configured.`
+            )
+        }
+      }),
+      rest: {
+        issues: {
+          addLabels: jest.fn().mockReturnValueOnce({
+            data: {}
+          })
+        },
+        git: {
+          createRef: jest.fn().mockReturnValueOnce({
+            data: {}
+          })
+        },
+        repos: {
+          // mock the first value of merge to be a success and the second to be an exception
+          merge: jest
+            .fn()
+            .mockReturnValueOnce({
+              data: {
+                merged: true
+              }
+            })
+            .mockImplementation(() => {
+              throw new Error('merge error')
+            })
+        },
+        pulls: {
+          create: jest.fn().mockReturnValueOnce({
+            data: {
+              number: 100,
+              html_url: 'https://github.com/test-owner/test-repo/pull/100'
+            }
+          }),
+          updateBranch: jest.fn().mockReturnValueOnce({
+            status: 202
+          })
+        }
+      }
+    }
+  })
+
+  process.env.INPUT_REVIEW_REQUIRED = 'true'
+  process.env.INPUT_LABELS = 'label1,label2, label3'
+  expect(await run()).toBe('success')
+
+  expect(infoMock).toHaveBeenCalledWith('Merged branch dependabot-1')
+  expect(warningMock).toHaveBeenCalledWith(
+    'Failed to merge branch dependabot-2'
   )
   expect(setOutputMock).toHaveBeenCalledWith('pr_number', 100)
   expect(setOutputMock).toHaveBeenCalledWith(
