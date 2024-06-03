@@ -61,6 +61,10 @@ inputs:
     description: Whether or not to update the combined branch with the latest changes from the base branch after creating the combined pull request
     default: "true"
     required: false
+  create_from_scratch:
+    description: Whether or not to start from a clean base branch when (re)creating the combined PR
+    default: "false"
+    required: false
 outputs:
   pr_url:
     description: The pull request URL if a PR was created

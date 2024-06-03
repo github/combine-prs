@@ -16,6 +16,12 @@ class AlreadyExistsError extends Error {
   }
 }
 
+function randomSha1() {
+  return Array.from({length: 40}, () =>
+    Math.floor(Math.random() * 16).toString(16)
+  ).join('')
+}
+
 const setOutputMock = jest.spyOn(core, 'setOutput')
 const infoMock = jest.spyOn(core, 'info')
 const warningMock = jest.spyOn(core, 'warning')
@@ -45,6 +51,7 @@ beforeEach(() => {
   process.env.INPUT_LABELS = ''
   process.env.INPUT_AUTOCLOSE = 'true'
   process.env.INPUT_UPDATE_BRANCH = 'true'
+  process.env.INPUT_CREATE_FROM_SCRATCH = 'false'
 
   jest.spyOn(github, 'getOctokit').mockImplementation(() => {
     return {
@@ -84,6 +91,16 @@ beforeEach(() => {
         git: {
           createRef: jest.fn().mockReturnValueOnce({
             data: {}
+          }),
+          updateRef: jest.fn().mockReturnValueOnce({
+            data: {}
+          }),
+          getRef: jest.fn().mockReturnValueOnce({
+            data: {
+              object: {
+                sha: randomSha1()
+              }
+            }
           })
         },
         repos: {
@@ -337,6 +354,16 @@ test('label check does not override CI or review status', async () => {
         git: {
           createRef: jest.fn().mockReturnValueOnce({
             data: {}
+          }),
+          updateRef: jest.fn().mockReturnValueOnce({
+            data: {}
+          }),
+          getRef: jest.fn().mockReturnValueOnce({
+            data: {
+              object: {
+                sha: randomSha1()
+              }
+            }
           })
         },
         repos: {
@@ -383,6 +410,16 @@ test('successfully runs the action with the select_label option', async () => {
         git: {
           createRef: jest.fn().mockReturnValueOnce({
             data: {}
+          }),
+          updateRef: jest.fn().mockReturnValueOnce({
+            data: {}
+          }),
+          getRef: jest.fn().mockReturnValueOnce({
+            data: {
+              object: {
+                sha: randomSha1()
+              }
+            }
           })
         },
         repos: {
@@ -507,7 +544,17 @@ test('runs the action and finds the combine branch already exists and the PR als
             .fn()
             .mockRejectedValueOnce(
               new AlreadyExistsError('Reference already exists')
-            )
+            ),
+          updateRef: jest.fn().mockReturnValueOnce({
+            data: {}
+          }),
+          getRef: jest.fn().mockReturnValueOnce({
+            data: {
+              object: {
+                sha: randomSha1()
+              }
+            }
+          })
         },
         repos: {
           merge: jest.fn().mockReturnValueOnce({
@@ -558,6 +605,16 @@ test('runs the action and fails to create a pull request', async () => {
         git: {
           createRef: jest.fn().mockReturnValueOnce({
             data: {}
+          }),
+          updateRef: jest.fn().mockReturnValueOnce({
+            data: {}
+          }),
+          getRef: jest.fn().mockReturnValueOnce({
+            data: {
+              object: {
+                sha: randomSha1()
+              }
+            }
           })
         },
         repos: {
@@ -619,7 +676,17 @@ test('runs the action and finds the combine branch already exists and the PR als
             .fn()
             .mockRejectedValueOnce(
               new AlreadyExistsError('Reference already exists')
-            )
+            ),
+          updateRef: jest.fn().mockReturnValueOnce({
+            data: {}
+          }),
+          getRef: jest.fn().mockReturnValueOnce({
+            data: {
+              object: {
+                sha: randomSha1()
+              }
+            }
+          })
         },
         repos: {
           merge: jest.fn().mockReturnValueOnce({
@@ -694,6 +761,16 @@ test('runs the action and does not find any branches to merge together', async (
         repos: {
           createRef: jest.fn().mockReturnValueOnce({
             data: {}
+          }),
+          updateRef: jest.fn().mockReturnValueOnce({
+            data: {}
+          }),
+          getRef: jest.fn().mockReturnValueOnce({
+            data: {
+              object: {
+                sha: randomSha1()
+              }
+            }
           }),
           merge: jest.fn().mockReturnValueOnce({
             data: {}
@@ -772,6 +849,16 @@ test('successfully runs the action and sets labels', async () => {
         git: {
           createRef: jest.fn().mockReturnValueOnce({
             data: {}
+          }),
+          updateRef: jest.fn().mockReturnValueOnce({
+            data: {}
+          }),
+          getRef: jest.fn().mockReturnValueOnce({
+            data: {
+              object: {
+                sha: randomSha1()
+              }
+            }
           })
         },
         repos: {
@@ -924,6 +1011,16 @@ test('successfully runs the action and sets labels when one PR has no CI defined
         git: {
           createRef: jest.fn().mockReturnValueOnce({
             data: {}
+          }),
+          updateRef: jest.fn().mockReturnValueOnce({
+            data: {}
+          }),
+          getRef: jest.fn().mockReturnValueOnce({
+            data: {
+              object: {
+                sha: randomSha1()
+              }
+            }
           })
         },
         repos: {
@@ -1080,6 +1177,16 @@ test('successfully runs the action and sets labels when one PR has no CI defined
         git: {
           createRef: jest.fn().mockReturnValueOnce({
             data: {}
+          }),
+          updateRef: jest.fn().mockReturnValueOnce({
+            data: {}
+          }),
+          getRef: jest.fn().mockReturnValueOnce({
+            data: {
+              object: {
+                sha: randomSha1()
+              }
+            }
           })
         },
         repos: {
@@ -1184,6 +1291,16 @@ test('successfully runs the action and sets labels when one PR has no CI defined
         git: {
           createRef: jest.fn().mockReturnValueOnce({
             data: {}
+          }),
+          updateRef: jest.fn().mockReturnValueOnce({
+            data: {}
+          }),
+          getRef: jest.fn().mockReturnValueOnce({
+            data: {
+              object: {
+                sha: randomSha1()
+              }
+            }
           })
         },
         repos: {
@@ -1288,6 +1405,16 @@ test('successfully runs the action and updates the pull request branch', async (
         git: {
           createRef: jest.fn().mockReturnValueOnce({
             data: {}
+          }),
+          updateRef: jest.fn().mockReturnValueOnce({
+            data: {}
+          }),
+          getRef: jest.fn().mockReturnValueOnce({
+            data: {
+              object: {
+                sha: randomSha1()
+              }
+            }
           })
         },
         repos: {
@@ -1331,6 +1458,319 @@ test('successfully runs the action and updates the pull request branch', async (
     'pr_url',
     'https://github.com/test-owner/test-repo/pull/100'
   )
+})
+
+test('successfully runs the action and uses a fresh pull request branch', async () => {
+  const createRef = jest.fn().mockReturnValueOnce({
+    data: {}
+  })
+  const updateRef = jest.fn().mockReturnValueOnce({
+    data: {}
+  })
+  const sha = randomSha1()
+  const getRef = jest.fn().mockReturnValueOnce({
+    data: {
+      object: {
+        sha
+      }
+    }
+  })
+  const deleteRef = jest.fn().mockReturnValueOnce({
+    data: {}
+  })
+
+  jest.spyOn(github, 'getOctokit').mockImplementation(() => {
+    return {
+      paginate: jest.fn().mockImplementation(() => {
+        return [
+          buildPR(1, 'dependabot-1', ['question']),
+          buildPR(2, 'dependabot-2'),
+          buildPR(3, 'dependabot-3', ['nocombine']),
+          buildPR(4, 'dependabot-4'),
+          buildPR(5, 'dependabot-5'),
+          buildPR(6, 'dependabot-6'),
+          buildPR(7, 'fix-package')
+        ]
+      }),
+      graphql: jest.fn().mockImplementation((_query, params) => {
+        switch (params.pull_number) {
+          case 1:
+          case 2:
+          case 3:
+            return buildStatusResponse('APPROVED', 'SUCCESS')
+          case 4:
+            return buildStatusResponse('APPROVED', 'FAILURE')
+          case 5:
+            return buildStatusResponse(null, 'SUCCESS')
+          case 6:
+            return {
+              repository: {
+                pullRequest: {
+                  reviewDecision: null,
+                  commits: {
+                    nodes: [
+                      {
+                        commit: {
+                          statusCheckRollup: null
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          default:
+            throw new Error(
+              `params.pull_number of ${params.pull_number} is not configured.`
+            )
+        }
+      }),
+      rest: {
+        issues: {
+          addLabels: jest.fn().mockReturnValueOnce({
+            data: {}
+          })
+        },
+        git: {
+          createRef,
+          updateRef,
+          getRef,
+          deleteRef
+        },
+        repos: {
+          // mock the first value of merge to be a success and the second to be an exception
+          merge: jest
+            .fn()
+            .mockReturnValueOnce({
+              data: {
+                merged: true
+              }
+            })
+            .mockImplementation(() => {
+              throw new Error('merge error')
+            })
+        },
+        pulls: {
+          create: jest.fn().mockReturnValueOnce({
+            data: {
+              number: 100,
+              html_url: 'https://github.com/test-owner/test-repo/pull/100'
+            }
+          }),
+          updateBranch: jest.fn().mockReturnValueOnce({
+            status: 202
+          })
+        }
+      }
+    }
+  })
+
+  process.env.INPUT_REVIEW_REQUIRED = 'true'
+  process.env.INPUT_CREATE_FROM_SCRATCH = 'true'
+  process.env.INPUT_LABELS = 'label1,label2, label3'
+  expect(await run()).toBe('success')
+
+  expect(createRef).toHaveBeenCalledWith(
+    expect.objectContaining({
+      ref: expect.stringContaining('refs/heads/combined-prs-branch-working')
+    })
+  )
+  expect(getRef).toHaveBeenCalledWith(
+    expect.objectContaining({
+      ref: expect.stringContaining('heads/combined-prs-branch-working')
+    })
+  )
+  expect(updateRef).toHaveBeenCalledWith(
+    expect.objectContaining({
+      ref: expect.stringContaining('heads/combined-prs-branch'),
+      sha
+    })
+  )
+  expect(deleteRef).toHaveBeenCalledWith(
+    expect.objectContaining({
+      ref: expect.stringContaining('heads/combined-prs-branch-working')
+    })
+  )
+
+  expect(infoMock).toHaveBeenCalledWith('Merged branch dependabot-1')
+  expect(warningMock).toHaveBeenCalledWith(
+    'Failed to merge branch dependabot-2'
+  )
+  expect(setOutputMock).toHaveBeenCalledWith('pr_number', 100)
+  expect(setOutputMock).toHaveBeenCalledWith(
+    'pr_url',
+    'https://github.com/test-owner/test-repo/pull/100'
+  )
+})
+
+test('successfully runs the action and uses the existing pull request branch', async () => {
+  const createRef = jest.fn().mockReturnValueOnce({
+    data: {}
+  })
+  const updateRef = jest.fn().mockReturnValueOnce({
+    data: {}
+  })
+  const sha = randomSha1()
+  const getRef = jest.fn().mockReturnValueOnce({
+    data: {
+      object: {
+        sha
+      }
+    }
+  })
+  const deleteRef = jest.fn().mockReturnValueOnce({
+    data: {}
+  })
+
+  jest.spyOn(github, 'getOctokit').mockImplementation(() => {
+    return {
+      paginate: jest.fn().mockImplementation(() => {
+        return [
+          buildPR(1, 'dependabot-1', ['question']),
+          buildPR(2, 'dependabot-2'),
+          buildPR(3, 'dependabot-3', ['nocombine']),
+          buildPR(4, 'dependabot-4'),
+          buildPR(5, 'dependabot-5'),
+          buildPR(6, 'dependabot-6'),
+          buildPR(7, 'fix-package')
+        ]
+      }),
+      graphql: jest.fn().mockImplementation((_query, params) => {
+        switch (params.pull_number) {
+          case 1:
+          case 2:
+          case 3:
+            return buildStatusResponse('APPROVED', 'SUCCESS')
+          case 4:
+            return buildStatusResponse('APPROVED', 'FAILURE')
+          case 5:
+            return buildStatusResponse(null, 'SUCCESS')
+          case 6:
+            return {
+              repository: {
+                pullRequest: {
+                  reviewDecision: null,
+                  commits: {
+                    nodes: [
+                      {
+                        commit: {
+                          statusCheckRollup: null
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          default:
+            throw new Error(
+              `params.pull_number of ${params.pull_number} is not configured.`
+            )
+        }
+      }),
+      rest: {
+        issues: {
+          addLabels: jest.fn().mockReturnValueOnce({
+            data: {}
+          })
+        },
+        git: {
+          createRef,
+          updateRef,
+          getRef,
+          deleteRef
+        },
+        repos: {
+          // mock the first value of merge to be a success and the second to be an exception
+          merge: jest
+            .fn()
+            .mockReturnValueOnce({
+              data: {
+                merged: true
+              }
+            })
+            .mockImplementation(() => {
+              throw new Error('merge error')
+            })
+        },
+        pulls: {
+          create: jest.fn().mockReturnValueOnce({
+            data: {
+              number: 100,
+              html_url: 'https://github.com/test-owner/test-repo/pull/100'
+            }
+          }),
+          updateBranch: jest.fn().mockReturnValueOnce({
+            status: 202
+          })
+        }
+      }
+    }
+  })
+
+  process.env.INPUT_REVIEW_REQUIRED = 'true'
+  process.env.INPUT_CREATE_FROM_SCRATCH = 'false'
+  process.env.INPUT_LABELS = 'label1,label2, label3'
+  expect(await run()).toBe('success')
+
+  expect(createRef).toHaveBeenCalledWith(
+    expect.objectContaining({
+      ref: expect.stringContaining('refs/heads/combined-prs-branch')
+    })
+  )
+  expect(getRef).not.toHaveBeenCalled()
+  expect(updateRef).not.toHaveBeenCalled()
+  expect(deleteRef).not.toHaveBeenCalled()
+
+  expect(infoMock).toHaveBeenCalledWith('Merged branch dependabot-1')
+  expect(warningMock).toHaveBeenCalledWith(
+    'Failed to merge branch dependabot-2'
+  )
+  expect(setOutputMock).toHaveBeenCalledWith('pr_number', 100)
+  expect(setOutputMock).toHaveBeenCalledWith(
+    'pr_url',
+    'https://github.com/test-owner/test-repo/pull/100'
+  )
+})
+
+test('runs the action and fails to create a working branch', async () => {
+  jest.spyOn(github, 'getOctokit').mockImplementation(() => {
+    return {
+      paginate: jest.fn().mockImplementation(() => {
+        return [buildPR(1, 'dependabot-1'), buildPR(2, 'dependabot-2')]
+      }),
+      graphql: jest.fn().mockImplementation(() => {
+        return buildStatusResponse('APPROVED', 'SUCCESS')
+      }),
+      rest: {
+        issues: {
+          createComment: jest.fn().mockReturnValueOnce({
+            data: {}
+          })
+        },
+        git: {
+          deleteRef: jest.fn().mockReturnValueOnce({
+            data: {}
+          }),
+          createRef: jest.fn().mockRejectedValueOnce(new BigBadError('Oh no!'))
+        },
+        repos: {
+          merge: jest.fn().mockReturnValueOnce({
+            data: {}
+          })
+        },
+        pulls: {
+          create: jest.fn().mockReturnValueOnce({
+            data: {}
+          })
+        }
+      }
+    }
+  })
+  process.env.INPUT_CREATE_FROM_SCRATCH = 'true'
+
+  expect(await run()).toBe('Failed to create working branch')
+  expect(setFailedMock).toHaveBeenCalledWith('Failed to create working branch')
 })
 
 function buildStatusResponse(reviewDecision, ciStatus) {
