@@ -54,7 +54,7 @@
     "@octokit/rest": "^20.0.2",
     "@types/node": "^20.8.10",
     "@vercel/ncc": "^0.38.1",
-    "babel-core": "^4.7.16",
+    "babel-core": "^6.26.3",
     "babel-jest": "^29.7.0",
     "eslint": "^8.52.0",
     "eslint-plugin-jest": "^27.6.0",
