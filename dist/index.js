@@ -31271,6 +31271,7 @@ async function run() {
   )
   const autoclose = core.getInput('autoclose') === 'true'
   const updateBranch = core.getBooleanInput('update_branch')
+  const createFromScratch = core.getBooleanInput('create_from_scratch')
 
   // check for either prefix or regex
   if (branchPrefix === '' && branchRegex === '') {
@@ -31352,6 +31353,39 @@ async function run() {
     return 'not enough PRs/branches matched criteria to create a combined PR'
   }
 
+  let workingRef = combineBranchName
+  if (createFromScratch) {
+    workingRef = combineBranchName + '-working'
+
+    // delete any pre-existing working branch
+    try {
+      await octokit.rest.git.deleteRef({
+        owner: github.context.repo.owner,
+        repo: github.context.repo.repo,
+        ref: 'heads/' + workingRef
+      })
+    } catch (error) {
+      // If the branch doesn't exist, that's fine
+      // istanbul ignore next
+      core.debug(`branch ${workingRef} not found - OK`)
+    }
+
+    // create our working branch
+    try {
+      await octokit.rest.git.createRef({
+        owner: github.context.repo.owner,
+        repo: github.context.repo.repo,
+        ref: 'refs/heads/' + workingRef,
+        sha: baseBranchSHA
+      })
+    } catch (error) {
+      // Otherwise, fail the Action
+      core.error(error)
+      core.setFailed('Failed to create working branch')
+      return 'Failed to create working branch'
+    }
+  }
+
   // Create a new branch
   try {
     await octokit.rest.git.createRef({
@@ -31380,7 +31414,7 @@ async function run() {
       await octokit.rest.repos.merge({
         owner: github.context.repo.owner,
         repo: github.context.repo.repo,
-        base: combineBranchName,
+        base: workingRef,
         head: branch
       })
       core.info('Merged branch ' + branch)
@@ -31389,6 +31423,33 @@ async function run() {
       core.warning('Failed to merge branch ' + branch)
       mergeFailedPRs.push(prString.replace('Closes ', ''))
     }
+  }
+
+  if (createFromScratch) {
+    // Get the updated ref of the working branch
+    const {
+      data: {object: workingRefObject}
+    } = await octokit.rest.git.getRef({
+      owner: github.context.repo.owner,
+      repo: github.context.repo.repo,
+      ref: 'heads/' + workingRef
+    })
+
+    // Update the PR branch to the latest commit of the working branch
+    await octokit.rest.git.updateRef({
+      owner: github.context.repo.owner,
+      repo: github.context.repo.repo,
+      ref: 'heads/' + combineBranchName,
+      sha: workingRefObject.sha,
+      force: true
+    })
+
+    // Delete the temp working branch
+    await octokit.rest.git.deleteRef({
+      owner: github.context.repo.owner,
+      repo: github.context.repo.repo,
+      ref: 'heads/' + workingRef
+    })
   }
 
   // Create a new PR with the combined branch

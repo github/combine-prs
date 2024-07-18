@@ -23,6 +23,7 @@ As mentioned above is this README, a core reason why this Action exists is to "c
 | ---- | ----------- | ------- | -------- |
 | `github_token` | GitHub token to use for authentication within this Action. Provided for you by default! | `${{ github.token }}` | `true` |
 | `branch_prefix` | Prefix for the branch name to use for the combined PR | `dependabot` | `true` |
+| `combine_branch_name` | The branch name to use for the combined PR | `combined-prs-branch` | `false` |
 | `pr_title` | The title of the pull request to create | `Combined PRs` | `true` |
 | `pr_body_header` | The header of the pull request body | `# Combined PRs ➡️📦⬅️` | `true` |
 | `min_combine_number` | The minimum number of PRs that have to match criteria in order to create a combined PR | `"2"` | `true` |
@@ -34,6 +35,7 @@ As mentioned above is this README, a core reason why this Action exists is to "c
 | `labels` | A comma separated list of labels to add to the combined PR - Example: `dependencies,combined-pr,etc` | `""` | `false` |
 | `autoclose` | Whether or not to close combined PRs if the combined PR is merged - can be `"true"` or `"false"` | `"true"` | `false` |
 | `update_branch` | Whether or not to update the combined branch with the latest changes from the base branch after creating the combined pull request | `"true"` | `false` |
+| `create_from_scratch` | Whether or not to start from a clean base branch when (re)creating the combined PR | `"false"` | `false` |
 
 ## Outputs 📤
 
