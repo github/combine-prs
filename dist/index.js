@@ -31366,6 +31366,8 @@ async function run() {
       })
     } catch (error) {
       // If the branch doesn't exist, that's fine
+      // istanbul ignore next
+      core.debug(`branch ${workingRef} not found - OK`)
     }
 
     // create our working branch
