@@ -33,6 +33,7 @@ As mentioned above is this README, a core reason why this Action exists is to "c
 | `ignore_label` | The label to ignore when combining PRs | `"nocombine"` | `true` |
 | `select_label` | The label which marks PRs that should be combined. Leave empty to consider all PRs. | `""` | `false` |
 | `labels` | A comma separated list of labels to add to the combined PR - Example: `dependencies,combined-pr,etc` | `""` | `false` |
+| `assignees` | A comma separated list of assignees the combined PR is assigned to - Example: `octocat` | `""` | `false` |
 | `autoclose` | Whether or not to close combined PRs if the combined PR is merged - can be `"true"` or `"false"` | `"true"` | `false` |
 | `update_branch` | Whether or not to update the combined branch with the latest changes from the base branch after creating the combined pull request | `"true"` | `false` |
 | `create_from_scratch` | Whether or not to start from a clean base branch when (re)creating the combined PR | `"false"` | `false` |
