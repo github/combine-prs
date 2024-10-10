@@ -17,6 +17,7 @@ export async function run() {
   const ignoreLabel = core.getInput('ignore_label')
   const selectLabel = core.getInput('select_label')
   const labels = core.getInput('labels').trim()
+  const assignees = core.getInput('assignees').trim()
   const token = core.getInput('github_token', {required: true})
   const prTitle = core.getInput('pr_title', {required: true})
   const prBodyHeader = core.getInput('pr_body_header', {required: true})
@@ -291,6 +292,22 @@ export async function run() {
         repo: context.repo.repo,
         issue_number: pullRequest.data.number,
         labels: labelsArray
+      })
+    }
+  }
+
+  if (assignees !== '') {
+    // split and trim assignees
+    const assigneesArray = assignees.split(',').map(label => label.trim())
+
+    // add assignees to the combined PR if specified
+    if (assigneesArray.length > 0) {
+      core.info(`Adding assignees to combined PR: ${assigneesArray}`)
+      await octokit.rest.issues.addAssignees({
+        owner: context.repo.owner,
+        repo: context.repo.repo,
+        issue_number: pullRequest.data.number,
+        assignees: assigneesArray
       })
     }
   }

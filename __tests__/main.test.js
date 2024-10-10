@@ -49,6 +49,7 @@ beforeEach(() => {
   process.env.GITHUB_REPOSITORY = 'test-owner/test-repo'
   process.env.INPUT_MIN_COMBINE_NUMBER = '2'
   process.env.INPUT_LABELS = ''
+  process.env.INPUT_ASSIGNEES = ''
   process.env.INPUT_AUTOCLOSE = 'true'
   process.env.INPUT_UPDATE_BRANCH = 'true'
   process.env.INPUT_CREATE_FROM_SCRATCH = 'false'
@@ -1771,6 +1772,88 @@ test('runs the action and fails to create a working branch', async () => {
 
   expect(await run()).toBe('Failed to create working branch')
   expect(setFailedMock).toHaveBeenCalledWith('Failed to create working branch')
+})
+
+test('successfully runs the action and sets assignees', async () => {
+  jest.spyOn(github, 'getOctokit').mockImplementation(() => {
+    return {
+      paginate: jest.fn().mockImplementation(() => {
+        return [
+          buildPR(1, 'dependabot-1', ['question']),
+          buildPR(2, 'dependabot-2')
+        ]
+      }),
+      graphql: jest.fn().mockImplementation((_query, params) => {
+        switch (params.pull_number) {
+          case 1:
+          case 2:
+          case 3:
+            return buildStatusResponse('APPROVED', 'SUCCESS')
+          case 4:
+            return buildStatusResponse('APPROVED', 'FAILURE')
+          case 5:
+            return buildStatusResponse(null, 'SUCCESS')
+          case 6:
+            return buildStatusResponse('REVIEW_REQUIRED', 'SUCCESS')
+          default:
+            throw new Error(
+              `params.pull_number of ${params.pull_number} is not configured.`
+            )
+        }
+      }),
+      rest: {
+        issues: {
+          addAssignees: jest.fn().mockReturnValueOnce({
+            data: {}
+          }),
+          addLabels: jest.fn().mockReturnValueOnce({
+            data: {}
+          })
+        },
+        git: {
+          createRef: jest.fn().mockReturnValueOnce({
+            data: {}
+          }),
+          updateRef: jest.fn().mockReturnValueOnce({
+            data: {}
+          }),
+          getRef: jest.fn().mockReturnValueOnce({
+            data: {
+              object: {
+                sha: randomSha1()
+              }
+            }
+          })
+        },
+        repos: {
+          // mock the first value of merge to be a success and the second to be an exception
+          merge: jest.fn().mockReturnValueOnce({
+            data: {
+              merged: true
+            }
+          })
+        },
+        pulls: {
+          create: jest.fn().mockReturnValueOnce({
+            data: {
+              number: 100,
+              html_url: 'https://github.com/test-owner/test-repo/pull/100'
+            }
+          })
+        }
+      }
+    }
+  })
+
+  process.env.INPUT_REVIEW_REQUIRED = 'true'
+  process.env.INPUT_ASSIGNEES = 'octocat ,another-user,  kolossal'
+  expect(await run()).toBe('success')
+
+  expect(infoMock).toHaveBeenCalledWith(
+    `Adding assignees to combined PR: octocat,another-user,kolossal`
+  )
+
+  expect(setOutputMock).toHaveBeenCalledWith('pr_number', 100)
 })
 
 function buildStatusResponse(reviewDecision, ciStatus) {
