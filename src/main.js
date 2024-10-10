@@ -298,7 +298,7 @@ export async function run() {
 
   if (assignees !== '') {
     // split and trim assignees
-    const assigneesArray = assignees.split(',').map(label => label.trim())
+    const assigneesArray = assignees.split(',').map(assignee => assignee.trim())
 
     // add assignees to the combined PR if specified
     if (assigneesArray.length > 0) {
