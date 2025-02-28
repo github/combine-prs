@@ -8,11 +8,14 @@ GitHub Apps are more scalable than personal access tokens. They also have a high
 
 ## Security Considerations
 
-Using private keys from one GitHub App across multiple repositories carries inherent risk, especially if the GitHub App has `write` permissions for repository `contents`. This is because each repository where the app is installed can use the private key to perform actions as the GitHub App on any other repository where the app is installed. Another risk is that if one repository has weak security controls and the key is exposed, all repositories that have installed the app are at risk as well. Even if the private keys are different on each repository, all private keys allow the same access and are intended for redundancy rather than segregating access.
+Be aware that GitHub App credentials can take actions on any repository it's installed for. If you have some repositories where PRs are used to perform sensitive actions, we recommend using a separate GitHub App for those repositories instead of sharing GitHub App credentials. This increases the security for those repositories, isolating them from potential attacks if the shared GitHub App's credentials are leaked.
 
-The exact same risks apply when using a GitHub (classic) PAT with `write` permissions for repository `contents`. The difference is that the PAT is tied to a user account, and the user account is likely to have access to many more repositories than the GitHub App (making it even less secure).
+When adding this action to a repository, [configure PR review requirements to require reviews from code owners](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/about-protected-branches#require-pull-request-reviews-before-merging), and [configure a CODEOWNERS file](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners). This will prevent leaked credentials from being used to push and then merge changes.
 
-The ideal approach would be to use a fine-grained personal access token (tied to a bot/service account). Each PAT would then be scoped to a single repository. This would be more secure, but would also be more cumbersome to manage at scale.
+### Required permissions
+
+This action requires `write` access to repository contents. This is required so the action can push branches for PRs to be created from. Note that this permission allows any changes to be pushed to any branch, in the absense of branch protection.
+This action requires `write` access to PRs. This is required so the action can create PRs. Note that this permission also allows approving PRs, in the absense of PR review requirements.
 
 ## Setting up a GitHub App
 
