@@ -75,5 +75,5 @@ outputs:
   pr_number:
     description: The pull request number if a PR was created
 runs:
-  using: "node20"
+  using: "node24"
   main: "dist/index.js"
